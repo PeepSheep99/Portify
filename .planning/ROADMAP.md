@@ -37,7 +37,7 @@ Plans:
 
 Plans:
 - [x] 02-00-PLAN.md — Wave 0: Test infrastructure + skeleton tests (all requirements)
-- [ ] 02-01-PLAN.md — YouTube Music OAuth + ytmusicapi integration (DST-01)
+- [x] 02-01-PLAN.md — YouTube Music OAuth + ytmusicapi integration (DST-01)
 - [ ] 02-02-PLAN.md — Track matching with tiered search + fuzzy matching (MTH-01, MTH-02)
 - [ ] 02-03-PLAN.md — Playlist transfer with SSE progress + results UI (DST-02, DST-03, UX-02, UX-03)
 
@@ -54,7 +54,7 @@ Plans:
 | Phase | Plans | Status |
 |-------|-------|--------|
 | 1. Foundation + Spotify Parser | 3/3 | Complete |
-| 2. YouTube Music + Transfer | 1/4 | In Progress |
+| 2. YouTube Music + Transfer | 2/4 | In Progress |
 
 ---
 *Roadmap created: 2026-03-13*

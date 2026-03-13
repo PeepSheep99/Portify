@@ -13,7 +13,7 @@
 
 ### YouTube Music Export
 
-- [ ] **DST-01**: User can connect YouTube Music account
+- [x] **DST-01**: User can connect YouTube Music account
 - [ ] **DST-02**: User can create playlist on YouTube Music
 - [ ] **DST-03**: User can add songs to YouTube Music library
 
@@ -60,7 +60,7 @@
 | SRC-02 | Phase 1 | Complete |
 | SRC-03 | Phase 1 | Complete |
 | UX-01 | Phase 1 | Complete |
-| DST-01 | Phase 2 | Pending |
+| DST-01 | Phase 2 | Complete |
 | DST-02 | Phase 2 | Pending |
 | DST-03 | Phase 2 | Pending |
 | MTH-01 | Phase 2 | Pending |
