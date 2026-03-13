@@ -2,7 +2,7 @@
 
 ## Overview
 
-Minimal viable product: Spotify GDPR JSON export → YouTube Music playlists. Two phases, ship fast.
+Minimal viable product: Spotify GDPR JSON export -> YouTube Music playlists. Two phases, ship fast.
 
 ## Phases
 
@@ -33,6 +33,13 @@ Plans:
 **Goal**: User can transfer playlists from Spotify to YouTube Music
 **Depends on**: Phase 1
 **Requirements**: DST-01, DST-02, DST-03, MTH-01, MTH-02, UX-02, UX-03
+**Plans:** 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — YouTube Music OAuth + ytmusicapi integration (DST-01)
+- [ ] 02-02-PLAN.md — Track matching with tiered search + fuzzy matching (MTH-01, MTH-02)
+- [ ] 02-03-PLAN.md — Playlist transfer with SSE progress + results UI (DST-02, DST-03, UX-02, UX-03)
+
 **Success Criteria**:
   1. User can authenticate with YouTube Music
   2. System matches tracks by name + artist
@@ -41,20 +48,14 @@ Plans:
   5. User sees progress during transfer
   6. User sees summary of results
 
-Plans:
-- [ ] 02-01: YouTube Music OAuth + ytmusicapi integration
-- [ ] 02-02: Track matching (name + artist)
-- [ ] 02-03: Playlist creation on YouTube Music
-- [ ] 02-04: Progress indicator + results summary
-
 ## Progress
 
 | Phase | Plans | Status |
 |-------|-------|--------|
 | 1. Foundation + Spotify Parser | 3/3 | Complete |
-| 2. YouTube Music + Transfer | 0/4 | Not started |
+| 2. YouTube Music + Transfer | 0/3 | Ready |
 
 ---
 *Roadmap created: 2026-03-13*
-*Scope: MVP (Spotify → YouTube Music only)*
+*Scope: MVP (Spotify -> YouTube Music only)*
 *Requirements: 13 total*
