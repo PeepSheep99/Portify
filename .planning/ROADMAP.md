@@ -6,7 +6,7 @@ Minimal viable product: Spotify GDPR JSON export → YouTube Music playlists. Tw
 
 ## Phases
 
-- [ ] **Phase 1: Foundation + Spotify Parser** — Vercel setup, JSON parsing, file upload UI
+- [x] **Phase 1: Foundation + Spotify Parser** — Vercel setup, JSON parsing, file upload UI
 - [ ] **Phase 2: YouTube Music + Transfer** — OAuth, matching, playlist creation, progress UI
 
 ## Phase Details
@@ -15,12 +15,12 @@ Minimal viable product: Spotify GDPR JSON export → YouTube Music playlists. Tw
 **Goal**: User can upload Spotify JSON and see their playlists
 **Depends on**: Nothing
 **Requirements**: DEP-01, DEP-02, SRC-01, SRC-02, SRC-03, UX-01
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans executed
 
 Plans:
 - [x] 01-01-PLAN.md — Vercel project setup + Python serverless + test infrastructure
 - [x] 01-02-PLAN.md — Spotify JSON parser with TDD (playlists + liked songs)
-- [ ] 01-03-PLAN.md — File upload UI with drag-and-drop + playlist display
+- [x] 01-03-PLAN.md — File upload UI with drag-and-drop + playlist display
 
 **Success Criteria**:
   1. App deploys to Vercel and loads in browser
@@ -51,7 +51,7 @@ Plans:
 
 | Phase | Plans | Status |
 |-------|-------|--------|
-| 1. Foundation + Spotify Parser | 2/3 | In Progress |
+| 1. Foundation + Spotify Parser | 3/3 | Complete |
 | 2. YouTube Music + Transfer | 0/4 | Not started |
 
 ---

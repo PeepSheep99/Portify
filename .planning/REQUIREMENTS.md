@@ -7,7 +7,7 @@
 
 ### Spotify Import
 
-- [ ] **SRC-01**: User can upload Spotify GDPR JSON export file
+- [x] **SRC-01**: User can upload Spotify GDPR JSON export file
 - [x] **SRC-02**: User can see parsed playlists with track names
 - [x] **SRC-03**: User can see parsed liked songs
 
@@ -24,7 +24,7 @@
 
 ### User Experience
 
-- [ ] **UX-01**: User can drag-and-drop JSON file
+- [x] **UX-01**: User can drag-and-drop JSON file
 - [ ] **UX-02**: User sees progress during transfer
 - [ ] **UX-03**: User sees summary of results
 
@@ -56,10 +56,10 @@
 |-------------|-------|--------|
 | DEP-01 | Phase 1 | Complete |
 | DEP-02 | Phase 1 | Complete |
-| SRC-01 | Phase 1 | Pending |
+| SRC-01 | Phase 1 | Complete |
 | SRC-02 | Phase 1 | Complete |
 | SRC-03 | Phase 1 | Complete |
-| UX-01 | Phase 1 | Pending |
+| UX-01 | Phase 1 | Complete |
 | DST-01 | Phase 2 | Pending |
 | DST-02 | Phase 2 | Pending |
 | DST-03 | Phase 2 | Pending |
