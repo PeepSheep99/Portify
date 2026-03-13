@@ -54,12 +54,12 @@ Plans:
 **Goal**: Polish the UI with icons, improved progress bar, and better UX flows
 **Depends on**: Phase 2
 **Requirements**: None (polish phase)
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed (03-02 deferred)
 
 Plans:
 - [x] 03-01-PLAN.md — Install Lucide icons, simplify progress bar (remove music theme)
 - [ ] 03-02-PLAN.md — Dropzone visibility toggle, playlist selection checkboxes
-- [ ] 03-03-PLAN.md — Fix SSE buffering for real-time progress updates
+- [x] 03-03-PLAN.md — Fix SSE buffering for real-time progress updates
 
 **Success Criteria**:
   1. Progress bar shows clean circular progress without music visualizer
@@ -74,7 +74,7 @@ Plans:
 |-------|-------|--------|
 | 1. Foundation + Spotify Parser | 3/3 | Complete |
 | 2. YouTube Music + Transfer | 3/4 | In Progress |
-| 3. UI Polish & UX Refinements | 1/3 | In Progress |
+| 3. UI Polish & UX Refinements | 2/3 | In Progress |
 
 ---
 *Roadmap created: 2026-03-13*
