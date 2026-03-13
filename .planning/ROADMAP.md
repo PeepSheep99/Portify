@@ -1,4 +1,4 @@
-# Roadmap: PlaylistCopier MVP
+# Roadmap: Portify MVP
 
 ## Overview
 

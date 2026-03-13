@@ -1,4 +1,4 @@
-# Project State: PlaylistCopier MVP
+# Project State: Portify MVP
 
 ## Project Reference
 

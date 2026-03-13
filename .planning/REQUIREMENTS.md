@@ -1,4 +1,4 @@
-# Requirements: PlaylistCopier MVP
+# Requirements: Portify MVP
 
 **Defined:** 2026-03-13
 **Core Value:** Users can move their Spotify playlists to YouTube Music without manually recreating them.
