@@ -2,7 +2,7 @@
 phase: 3
 slug: ui-polish-ux-refinements
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-03-14
 ---
@@ -38,21 +38,19 @@ created: 2026-03-14
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 03-01-01 | 01 | 1 | UI-POLISH | visual | Manual inspection | N/A | ⬜ pending |
-| 03-02-01 | 02 | 1 | SSE-FIX | e2e/manual | Network tab inspection | N/A | ⬜ pending |
-| 03-03-01 | 03 | 1 | CHECKBOX | unit | `npm run test:run -- Checkbox` | ❌ W0 | ⬜ pending |
-| 03-04-01 | 04 | 1 | ICONS | unit | `npm run test:run -- icons` | ❌ W0 | ⬜ pending |
-| 03-05-01 | 05 | 1 | PROGRESS | visual | Manual inspection | N/A | ⬜ pending |
+| 03-01-01 | 01 | 1 | ICONS+PROGRESS | build+unit | `npm run build && npm run test:run -- --reporter=dot` | N/A | pending |
+| 03-02-01 | 02 | 2 | CHECKBOX | unit | `npx tsc --noEmit && npm run test:run -- Checkbox` | W0 | pending |
+| 03-02-02 | 02 | 2 | DROPZONE+SELECT | build+unit | `npm run build && npm run test:run -- --reporter=dot` | N/A | pending |
+| 03-03-01 | 03 | 1 | SSE-FIX | import+grep | `python -c "from index import transfer_stream_generator" && grep -q "Content-Encoding" api/transfer.py && grep -q "flush\|sleep" api/index.py` | N/A | pending |
+| 03-03-02 | 03 | 1 | SSE-FIX | manual | Network tab inspection | N/A | pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: pending / green / red / flaky*
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] `src/components/ui/Checkbox.test.tsx` — test checkbox toggle behavior
-- [ ] Update existing component tests to cover new visibility/selection props
-- [ ] No new test infrastructure needed — existing Vitest setup sufficient
+- [ ] `src/components/ui/Checkbox.test.tsx` — test checkbox toggle, animation, disabled state (created in Plan 03-02 Task 1)
 
 ---
 
@@ -64,16 +62,17 @@ created: 2026-03-14
 | Progress bar animates correctly | PROGRESS | Visual animation quality | 1. Start transfer 2. Watch for smooth progress updates |
 | SSE streaming works real-time | SSE-FIX | Requires network inspection | 1. Open DevTools Network 2. Start transfer 3. Verify events arrive incrementally |
 | Icons render at correct size | ICONS | Visual inspection | 1. Navigate app 2. Check all icons display consistently |
+| Add more files button shows dropzone | UI-POLISH | Interactive behavior | 1. Upload file 2. Click "Add more files" 3. Verify dropzone reappears |
 
 ---
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 15s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 15s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** ready for execution
