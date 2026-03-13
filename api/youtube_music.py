@@ -198,3 +198,64 @@ def get_ytmusic_client(oauth_token_json: str):
 
     # YTMusic accepts the token as a JSON string directly
     return YTMusic(oauth_token_json, oauth_credentials=credentials)
+
+
+def create_playlist(ytmusic, name: str, description: str = "") -> str:
+    """Create a new playlist on YouTube Music.
+
+    Args:
+        ytmusic: Authenticated YTMusic client
+        name: Playlist name
+        description: Optional playlist description
+
+    Returns:
+        Playlist ID of the newly created playlist
+
+    Raises:
+        Exception: If playlist creation fails
+    """
+    # Use default description if none provided
+    if not description:
+        description = f"Imported from Spotify using Portify"
+
+    playlist_id = ytmusic.create_playlist(title=name, description=description)
+    return playlist_id
+
+
+def add_tracks_to_playlist(ytmusic, playlist_id: str, video_ids: list[str]) -> int:
+    """Add tracks to a YouTube Music playlist.
+
+    Batches requests in groups of 25 to avoid API limits.
+    Uses duplicates=True to allow duplicate tracks as recommended in RESEARCH.md.
+
+    Args:
+        ytmusic: Authenticated YTMusic client
+        playlist_id: Target playlist ID
+        video_ids: List of YouTube video IDs to add
+
+    Returns:
+        Number of tracks successfully added
+    """
+    if not video_ids:
+        return 0
+
+    added_count = 0
+    batch_size = 25
+
+    for i in range(0, len(video_ids), batch_size):
+        batch = video_ids[i:i + batch_size]
+        try:
+            result = ytmusic.add_playlist_items(
+                playlistId=playlist_id,
+                videoIds=batch,
+                duplicates=True
+            )
+            # add_playlist_items returns dict with status or list
+            # on success, count the batch as added
+            if result:
+                added_count += len(batch)
+        except Exception:
+            # Continue with remaining batches even if one fails
+            pass
+
+    return added_count
