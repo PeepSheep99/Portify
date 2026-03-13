@@ -15,17 +15,19 @@ Minimal viable product: Spotify GDPR JSON export → YouTube Music playlists. Tw
 **Goal**: User can upload Spotify JSON and see their playlists
 **Depends on**: Nothing
 **Requirements**: DEP-01, DEP-02, SRC-01, SRC-02, SRC-03, UX-01
+**Plans:** 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Vercel project setup + Python serverless + test infrastructure
+- [ ] 01-02-PLAN.md — Spotify JSON parser with TDD (playlists + liked songs)
+- [ ] 01-03-PLAN.md — File upload UI with drag-and-drop + playlist display
+
 **Success Criteria**:
   1. App deploys to Vercel and loads in browser
   2. Python serverless function responds (health check)
   3. User can drag-and-drop Spotify JSON file
   4. User sees list of playlists with track names
   5. User sees liked songs as separate list
-
-Plans:
-- [ ] 01-01: Vercel project setup + Python serverless
-- [ ] 01-02: Spotify JSON parser (playlists + liked songs)
-- [ ] 01-03: File upload UI with drag-and-drop
 
 ### Phase 2: YouTube Music + Transfer
 **Goal**: User can transfer playlists from Spotify to YouTube Music
@@ -49,7 +51,7 @@ Plans:
 
 | Phase | Plans | Status |
 |-------|-------|--------|
-| 1. Foundation + Spotify Parser | 0/3 | Not started |
+| 1. Foundation + Spotify Parser | 0/3 | Ready to execute |
 | 2. YouTube Music + Transfer | 0/4 | Not started |
 
 ---
