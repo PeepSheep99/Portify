@@ -8,6 +8,7 @@ Minimal viable product: Spotify GDPR JSON export -> YouTube Music playlists. Two
 
 - [x] **Phase 1: Foundation + Spotify Parser** — Vercel setup, JSON parsing, file upload UI
 - [ ] **Phase 2: YouTube Music + Transfer** — OAuth, matching, playlist creation, progress UI
+- [ ] **Phase 3: UI Polish & UX Refinements** — Icons, progress bar, dropzone visibility, playlist selection
 
 ## Phase Details
 
@@ -49,12 +50,31 @@ Plans:
   5. User sees progress during transfer
   6. User sees summary of results
 
+### Phase 3: UI Polish & UX Refinements
+**Goal**: Polish the UI with icons, improved progress bar, and better UX flows
+**Depends on**: Phase 2
+**Requirements**: None (polish phase)
+**Plans:** 3 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Install Lucide icons, simplify progress bar (remove music theme)
+- [ ] 03-02-PLAN.md — Dropzone visibility toggle, playlist selection checkboxes
+- [ ] 03-03-PLAN.md — Fix SSE buffering for real-time progress updates
+
+**Success Criteria**:
+  1. Progress bar shows clean circular progress without music visualizer
+  2. All icons use Lucide React for consistency
+  3. Dropzone hides after upload, can be shown again
+  4. User can select/deselect playlists with checkboxes
+  5. SSE progress events arrive in real-time (not batched)
+
 ## Progress
 
 | Phase | Plans | Status |
 |-------|-------|--------|
 | 1. Foundation + Spotify Parser | 3/3 | Complete |
 | 2. YouTube Music + Transfer | 3/4 | In Progress |
+| 3. UI Polish & UX Refinements | 0/3 | Pending |
 
 ---
 *Roadmap created: 2026-03-13*
