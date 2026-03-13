@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { flushSync } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus } from 'lucide-react';
 import { FileDropzone } from '@/components/FileDropzone';
 import { PlaylistList } from '@/components/PlaylistList';
 import { YouTubeAuthButton } from '@/components/YouTubeAuthButton';
@@ -23,13 +26,34 @@ export default function Home() {
   );
   const [transferringPlaylist, setTransferringPlaylist] =
     useState<ParsedPlaylist | null>(null);
+  const [showDropzone, setShowDropzone] = useState(true);
+  const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
 
   const handlePlaylistsParsed = (newPlaylists: ParsedPlaylist[]) => {
     setPlaylists((prev) => [...prev, ...newPlaylists]);
+    setShowDropzone(false); // Hide after successful upload
   };
 
   const handleClear = () => {
     setPlaylists([]);
+    setSelectedPlaylists([]);
+    setShowDropzone(true); // Show dropzone when all cleared
+  };
+
+  const togglePlaylistSelection = (playlistName: string) => {
+    setSelectedPlaylists(prev =>
+      prev.includes(playlistName)
+        ? prev.filter(n => n !== playlistName)
+        : [...prev, playlistName]
+    );
+  };
+
+  const selectAllPlaylists = () => {
+    setSelectedPlaylists(playlists.map(p => p.name));
+  };
+
+  const deselectAllPlaylists = () => {
+    setSelectedPlaylists([]);
   };
 
   const handleAuthenticated = (token: string) => {
@@ -50,7 +74,10 @@ export default function Home() {
 
     try {
       const result = await transferPlaylist(oauthToken, playlist, (progress) => {
-        setTransferProgress(progress);
+        // Force immediate render for smooth progress updates
+        flushSync(() => {
+          setTransferProgress(progress);
+        });
       });
       setTransferResult(result);
       setTransferProgress({
@@ -80,68 +107,180 @@ export default function Home() {
   const isTransferring = transferringPlaylist !== null;
 
   return (
-    <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
-      <div className="mx-auto max-w-3xl px-4 py-12">
-        <header className="mb-8 text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-black dark:text-zinc-50">
+    <div className="min-h-screen relative">
+      <div className="mx-auto max-w-2xl px-4 py-12 sm:py-16">
+        {/* Header */}
+        <motion.header
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-12 text-center"
+        >
+          {/* Logo - Spotify to YouTube transfer */}
+          <div className="inline-flex items-center gap-3 mb-5">
+            {/* Spotify icon */}
+            <div className="w-14 h-14 rounded-xl bg-[#1db954] flex items-center justify-center shadow-lg shadow-[#1db954]/30">
+              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+              </svg>
+            </div>
+            {/* Arrow */}
+            <svg className="w-6 h-6 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+            {/* YouTube Music icon */}
+            <div className="w-14 h-14 rounded-xl bg-[#ff0000] flex items-center justify-center shadow-lg shadow-[#ff0000]/30">
+              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.376 0 0 5.376 0 12s5.376 12 12 12 12-5.376 12-12S18.624 0 12 0zm0 19.104c-3.924 0-7.104-3.18-7.104-7.104S8.076 4.896 12 4.896s7.104 3.18 7.104 7.104-3.18 7.104-7.104 7.104zm0-13.332c-3.432 0-6.228 2.796-6.228 6.228S8.568 18.228 12 18.228s6.228-2.796 6.228-6.228S15.432 5.772 12 5.772zM9.684 15.54V8.46L15.816 12l-6.132 3.54z"/>
+              </svg>
+            </div>
+          </div>
+          <h1 className="text-4xl font-bold tracking-tight text-white mb-2">
             Portify
           </h1>
-          <p className="mt-2 text-xl text-zinc-600 dark:text-zinc-400">
-            Spotify to YouTube Music
+          <p className="text-base text-white/50">
+            Transfer your Spotify playlists to YouTube Music
           </p>
-        </header>
+        </motion.header>
 
         <main className="space-y-8">
           {/* YouTube Music Auth */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
             <YouTubeAuthButton onAuthenticated={handleAuthenticated} />
-          </section>
+          </motion.section>
 
           {/* File upload section */}
-          <section>
-            <FileDropzone onPlaylistsParsed={handlePlaylistsParsed} />
-          </section>
+          <AnimatePresence mode="wait">
+            {showDropzone && (
+              <motion.section
+                key="dropzone"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <FileDropzone onPlaylistsParsed={handlePlaylistsParsed} />
+              </motion.section>
+            )}
+          </AnimatePresence>
+
+          {/* Add more files button (shown when dropzone hidden and playlists exist) */}
+          <AnimatePresence>
+            {!showDropzone && playlists.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex justify-center"
+              >
+                <button
+                  onClick={() => setShowDropzone(true)}
+                  className="text-sm text-white/50 hover:text-white/80 transition-colors flex items-center gap-2 glass px-4 py-2 rounded-xl"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add more files
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Clear button when playlists exist */}
-          {playlists.length > 0 && (
-            <div className="flex justify-end">
-              <button
-                onClick={handleClear}
-                className="text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+          <AnimatePresence>
+            {playlists.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex justify-end"
               >
-                Clear all playlists
-              </button>
-            </div>
-          )}
+                <button
+                  onClick={handleClear}
+                  className="text-sm text-white/40 hover:text-white/70 transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Clear all
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Playlist display section */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
             <PlaylistList
               playlists={playlists}
               onTransfer={oauthToken ? handleTransfer : undefined}
               transferringPlaylist={transferringPlaylist}
+              selectedIds={selectedPlaylists}
+              onToggleSelect={togglePlaylistSelection}
+              onSelectAll={selectAllPlaylists}
+              onDeselectAll={deselectAllPlaylists}
             />
-          </section>
+          </motion.section>
         </main>
+
+        {/* Footer */}
+        <motion.footer
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-16 text-center"
+        >
+          <p className="text-sm text-white/40">
+            Made with <span className="text-red-400">♥</span> by <span className="text-white/60 font-medium">Navneet</span>
+          </p>
+        </motion.footer>
       </div>
 
       {/* Transfer progress modal/overlay */}
-      {isTransferring && transferProgress && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md">
-            <TransferProgress progress={transferProgress} />
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {isTransferring && transferProgress && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="w-full max-w-md"
+            >
+              <TransferProgress progress={transferProgress} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Transfer results modal */}
-      {transferResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg">
-            <TransferResults result={transferResult} onClose={handleCloseResults} />
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {transferResult && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="w-full max-w-lg"
+            >
+              <TransferResults result={transferResult} onClose={handleCloseResults} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

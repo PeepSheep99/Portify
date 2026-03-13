@@ -3,12 +3,17 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Music, ChevronDown, ArrowRight, Loader2, ListMusic } from 'lucide-react';
+import { Checkbox } from '@/components/ui';
 import type { ParsedPlaylist, ParsedTrack } from '@/types/spotify';
 
 interface PlaylistListProps {
   playlists: ParsedPlaylist[];
   onTransfer?: (playlist: ParsedPlaylist) => void;
   transferringPlaylist?: ParsedPlaylist | null;
+  selectedIds?: string[];
+  onToggleSelect?: (name: string) => void;
+  onSelectAll?: () => void;
+  onDeselectAll?: () => void;
 }
 
 // Generate a unique gradient based on string hash
@@ -58,6 +63,8 @@ interface PlaylistCardProps {
   onTransfer?: (playlist: ParsedPlaylist) => void;
   isTransferring?: boolean;
   index: number;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
 }
 
 function PlaylistCard({
@@ -65,6 +72,8 @@ function PlaylistCard({
   onTransfer,
   isTransferring,
   index,
+  isSelected,
+  onToggleSelect,
 }: PlaylistCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -92,6 +101,14 @@ function PlaylistCard({
 
       <div className="p-4">
         <div className="flex items-center gap-4">
+          {/* Checkbox for selection */}
+          {onToggleSelect && (
+            <Checkbox
+              checked={isSelected || false}
+              onChange={onToggleSelect}
+              disabled={isTransferring}
+            />
+          )}
           {/* Album art placeholder */}
           <motion.div
             className="w-16 h-16 rounded-xl flex-shrink-0 flex items-center justify-center"
@@ -199,6 +216,10 @@ export function PlaylistList({
   playlists,
   onTransfer,
   transferringPlaylist,
+  selectedIds = [],
+  onToggleSelect,
+  onSelectAll,
+  onDeselectAll,
 }: PlaylistListProps) {
   if (playlists.length === 0) {
     return (
@@ -255,6 +276,8 @@ export function PlaylistList({
                 onTransfer={onTransfer}
                 isTransferring={isPlaylistTransferring(playlist)}
                 index={index}
+                isSelected={selectedIds.includes(playlist.name)}
+                onToggleSelect={onToggleSelect ? () => onToggleSelect(playlist.name) : undefined}
               />
             ))}
           </div>
@@ -279,6 +302,23 @@ export function PlaylistList({
             <span className="px-2 py-0.5 rounded-full text-xs bg-white/10 text-white/60">
               {regularPlaylists.length}
             </span>
+            {onSelectAll && onDeselectAll && regularPlaylists.length > 1 && (
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  onClick={onSelectAll}
+                  className="text-xs text-white/40 hover:text-white/70 transition-colors"
+                >
+                  Select all
+                </button>
+                <span className="text-white/20">|</span>
+                <button
+                  onClick={onDeselectAll}
+                  className="text-xs text-white/40 hover:text-white/70 transition-colors"
+                >
+                  Deselect all
+                </button>
+              </div>
+            )}
           </motion.div>
           <div className="space-y-4">
             {regularPlaylists.map((playlist, index) => (
@@ -288,6 +328,8 @@ export function PlaylistList({
                 onTransfer={onTransfer}
                 isTransferring={isPlaylistTransferring(playlist)}
                 index={index + likedSongs.length}
+                isSelected={selectedIds.includes(playlist.name)}
+                onToggleSelect={onToggleSelect ? () => onToggleSelect(playlist.name) : undefined}
               />
             ))}
           </div>
