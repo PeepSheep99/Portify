@@ -1,7 +1,23 @@
 """Portify API - Python serverless functions on Vercel"""
 import json
 import time
-from typing import Generator
+import logging
+import sys
+from typing import Generator, Optional, List
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Configure logging to stdout with immediate flush
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger(__name__)
+# Load .env.local for local development
+load_dotenv(Path(__file__).parent.parent / ".env.local")
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -10,9 +26,10 @@ from pydantic import BaseModel
 from api.youtube_music import (
     start_device_auth,
     poll_device_auth,
-    get_ytmusic_client,
-    create_playlist,
-    add_tracks_to_playlist
+    get_ytmusic_client_for_search,
+    get_access_token,
+    create_playlist_youtube_api,
+    add_tracks_to_playlist_youtube_api,
 )
 from api.track_matcher import match_tracks
 
@@ -101,13 +118,13 @@ class TrackData(BaseModel):
     """Track data for transfer."""
     name: str
     artist: str
-    album: str | None = None
+    album: Optional[str] = None
 
 
 class PlaylistData(BaseModel):
     """Playlist data for transfer."""
     name: str
-    tracks: list[TrackData]
+    tracks: List[TrackData]
 
 
 class TransferRequest(BaseModel):
@@ -126,9 +143,21 @@ def transfer_stream_generator(request: TransferRequest) -> Generator[str, None, 
     2. creating - Create the playlist
     3. adding - Add matched tracks to playlist
     """
+    logger.info("START transfer_stream_generator")
+    logger.info(f"Playlist name: {request.playlist.name}")
+    logger.info(f"Track count: {len(request.playlist.tracks)}")
+    logger.info(f"oauth_token (first 50 chars): {request.oauth_token[:50]}...")
+
     try:
-        # Create YTMusic client
-        ytmusic = get_ytmusic_client(request.oauth_token)
+        # Extract access token for YouTube Data API calls
+        access_token = get_access_token(request.oauth_token)
+        logger.info("Access token extracted")
+
+        # Create unauthenticated YTMusic client for search
+        # (YouTube Music API doesn't accept TV OAuth tokens, but search works without auth)
+        logger.info("Creating unauthenticated YTMusic client for search...")
+        ytmusic = get_ytmusic_client_for_search()
+        logger.info("YTMusic client created successfully")
 
         # Convert tracks to dict format for matcher
         tracks = [
@@ -158,10 +187,21 @@ def transfer_stream_generator(request: TransferRequest) -> Generator[str, None, 
         for i, track in enumerate(tracks):
             # Send progress event
             yield f"data: {json.dumps({'phase': 'matching', 'current': i + 1, 'total': total_tracks, 'currentTrack': track['name'], 'status': 'in_progress'})}\n\n"
+            # Force I/O flush for real-time streaming
+            sys.stderr.flush()
+            time.sleep(0.01)  # 10ms - forces context switch for I/O
 
             # Match single track (use match_tracks with single item)
             from api.track_matcher import search_track
-            result = search_track(ytmusic, track['name'], track['artist'])
+            logger.info(f"Searching track {i+1}/{total_tracks}: {track['name']} by {track['artist']}")
+            try:
+                result = search_track(ytmusic, track['name'], track['artist'])
+                logger.info(f"Search result: {'FOUND' if result else 'NOT FOUND'}")
+            except Exception as search_err:
+                logger.error(f"Search EXCEPTION: {type(search_err).__name__}: {search_err}")
+                import traceback
+                logger.error(traceback.format_exc())
+                raise
 
             if result:
                 matched_tracks.append({
@@ -184,33 +224,39 @@ def transfer_stream_generator(request: TransferRequest) -> Generator[str, None, 
             if i < total_tracks - 1:
                 time.sleep(0.15)
 
-        # Phase 2: Create playlist
+        # Phase 2: Create playlist using YouTube Data API
         yield f"data: {json.dumps({'phase': 'creating', 'current': 0, 'total': 0, 'status': 'in_progress'})}\n\n"
+        # Force I/O flush for real-time streaming
+        sys.stderr.flush()
+        time.sleep(0.01)
 
-        playlist_id = create_playlist(ytmusic, request.playlist.name)
+        logger.info("Creating playlist via YouTube Data API...")
+        playlist_id = create_playlist_youtube_api(access_token, request.playlist.name)
+        logger.info(f"Playlist created: {playlist_id}")
 
-        # Phase 3: Add tracks
+        # Phase 3: Add tracks using YouTube Data API
         video_ids = [t['matched']['videoId'] for t in matched_tracks]
         total_to_add = len(video_ids)
 
         if total_to_add > 0:
-            # Add in batches of 25, send progress after each batch
-            batch_size = 25
+            logger.info(f"Adding {total_to_add} tracks to playlist...")
             added_count = 0
 
-            for i in range(0, total_to_add, batch_size):
-                batch = video_ids[i:i + batch_size]
+            for i, video_id in enumerate(video_ids):
                 try:
-                    ytmusic.add_playlist_items(
-                        playlistId=playlist_id,
-                        videoIds=batch,
-                        duplicates=True
-                    )
-                    added_count += len(batch)
-                except Exception:
-                    pass  # Continue with remaining batches
+                    add_tracks_to_playlist_youtube_api(access_token, playlist_id, [video_id])
+                    added_count += 1
+                except Exception as e:
+                    logger.warning(f"Failed to add video {video_id}: {e}")
+                    # Continue with remaining tracks
 
-                yield f"data: {json.dumps({'phase': 'adding', 'current': min(i + batch_size, total_to_add), 'total': total_to_add, 'status': 'in_progress'})}\n\n"
+                # Send progress update every track
+                yield f"data: {json.dumps({'phase': 'adding', 'current': i + 1, 'total': total_to_add, 'status': 'in_progress'})}\n\n"
+                # Force I/O flush for real-time streaming
+                sys.stderr.flush()
+                time.sleep(0.01)
+
+            logger.info(f"Added {added_count}/{total_to_add} tracks")
 
         # Build match result
         match_rate = len(matched_tracks) / total_tracks if total_tracks > 0 else 0
@@ -231,9 +277,18 @@ def transfer_stream_generator(request: TransferRequest) -> Generator[str, None, 
         }
 
         yield f"data: {json.dumps({'status': 'complete', 'result': transfer_result})}\n\n"
+        # Force I/O flush for real-time streaming
+        sys.stderr.flush()
+        time.sleep(0.01)
 
     except Exception as e:
+        logger.error(f"FATAL EXCEPTION: {type(e).__name__}: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         yield f"data: {json.dumps({'status': 'error', 'error': str(e)})}\n\n"
+        # Force I/O flush for real-time streaming
+        sys.stderr.flush()
+        time.sleep(0.01)
 
 
 @app.post("/api/transfer")
@@ -248,12 +303,20 @@ def transfer_playlist(request: TransferRequest):
 
     Response: SSE stream with progress events
     """
+    logger.info("=" * 50)
+    logger.info("REQUEST RECEIVED: /api/transfer")
+    logger.info(f"Playlist: {request.playlist.name}")
+    logger.info(f"Tracks: {len(request.playlist.tracks)}")
+    logger.info(f"Token length: {len(request.oauth_token)}")
+    logger.info("=" * 50)
+
     return StreamingResponse(
         transfer_stream_generator(request),
         media_type="text/event-stream",
         headers={
-            "Cache-Control": "no-cache",
+            "Cache-Control": "no-cache, no-transform",
             "Connection": "keep-alive",
-            "X-Accel-Buffering": "no"  # Disable nginx buffering
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+            "Content-Encoding": "none",  # Disable compression which can cause buffering
         }
     )
