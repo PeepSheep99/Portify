@@ -19,8 +19,8 @@
 
 ### Track Matching
 
-- [ ] **MTH-01**: System matches tracks by name + artist
-- [ ] **MTH-02**: System shows which tracks matched/unmatched
+- [x] **MTH-01**: System matches tracks by name + artist
+- [x] **MTH-02**: System shows which tracks matched/unmatched
 
 ### User Experience
 
@@ -63,8 +63,8 @@
 | DST-01 | Phase 2 | Complete |
 | DST-02 | Phase 2 | Pending |
 | DST-03 | Phase 2 | Pending |
-| MTH-01 | Phase 2 | Pending |
-| MTH-02 | Phase 2 | Pending |
+| MTH-01 | Phase 2 | Complete |
+| MTH-02 | Phase 2 | Complete |
 | UX-02 | Phase 2 | Pending |
 | UX-03 | Phase 2 | Pending |
 
