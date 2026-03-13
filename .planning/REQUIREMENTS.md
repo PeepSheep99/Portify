@@ -8,8 +8,8 @@
 ### Spotify Import
 
 - [ ] **SRC-01**: User can upload Spotify GDPR JSON export file
-- [ ] **SRC-02**: User can see parsed playlists with track names
-- [ ] **SRC-03**: User can see parsed liked songs
+- [x] **SRC-02**: User can see parsed playlists with track names
+- [x] **SRC-03**: User can see parsed liked songs
 
 ### YouTube Music Export
 
@@ -57,8 +57,8 @@
 | DEP-01 | Phase 1 | Complete |
 | DEP-02 | Phase 1 | Complete |
 | SRC-01 | Phase 1 | Pending |
-| SRC-02 | Phase 1 | Pending |
-| SRC-03 | Phase 1 | Pending |
+| SRC-02 | Phase 1 | Complete |
+| SRC-03 | Phase 1 | Complete |
 | UX-01 | Phase 1 | Pending |
 | DST-01 | Phase 2 | Pending |
 | DST-02 | Phase 2 | Pending |
