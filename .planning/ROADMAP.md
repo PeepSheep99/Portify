@@ -57,7 +57,7 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Install Lucide icons, simplify progress bar (remove music theme)
+- [x] 03-01-PLAN.md — Install Lucide icons, simplify progress bar (remove music theme)
 - [ ] 03-02-PLAN.md — Dropzone visibility toggle, playlist selection checkboxes
 - [ ] 03-03-PLAN.md — Fix SSE buffering for real-time progress updates
 
@@ -74,7 +74,7 @@ Plans:
 |-------|-------|--------|
 | 1. Foundation + Spotify Parser | 3/3 | Complete |
 | 2. YouTube Music + Transfer | 3/4 | In Progress |
-| 3. UI Polish & UX Refinements | 0/3 | Pending |
+| 3. UI Polish & UX Refinements | 1/3 | In Progress |
 
 ---
 *Roadmap created: 2026-03-13*
