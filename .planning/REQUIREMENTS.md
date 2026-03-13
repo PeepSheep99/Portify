@@ -30,8 +30,8 @@
 
 ### Deployment
 
-- [ ] **DEP-01**: App hosted on Vercel (free tier)
-- [ ] **DEP-02**: YouTube Music calls via Python serverless
+- [x] **DEP-01**: App hosted on Vercel (free tier)
+- [x] **DEP-02**: YouTube Music calls via Python serverless
 
 ## v2 Requirements (Future)
 
@@ -54,8 +54,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DEP-01 | Phase 1 | Pending |
-| DEP-02 | Phase 1 | Pending |
+| DEP-01 | Phase 1 | Complete |
+| DEP-02 | Phase 1 | Complete |
 | SRC-01 | Phase 1 | Pending |
 | SRC-02 | Phase 1 | Pending |
 | SRC-03 | Phase 1 | Pending |
