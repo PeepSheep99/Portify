@@ -56,7 +56,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### UI/UX (Differentiator)
 
 - [ ] **UX-01**: Clean, modern landing page that explains what the app does
-- [ ] **UX-02**: Step-by-step wizard flow (source → match → destination → confirm)
+- [ ] **UX-02**: Step-by-step wizard flow (source -> match -> destination -> confirm)
 - [ ] **UX-03**: Drag-and-drop file upload for Spotify JSON
 - [ ] **UX-04**: Visual playlist cards showing album art and track count
 - [ ] **UX-05**: Animated progress with per-track status during transfer
@@ -103,49 +103,49 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SRC-01 | TBD | Pending |
-| SRC-02 | TBD | Pending |
-| SRC-03 | TBD | Pending |
-| SRC-04 | TBD | Pending |
-| SRC-05 | TBD | Pending |
-| SRC-06 | TBD | Pending |
-| SRC-07 | TBD | Pending |
-| SRC-08 | TBD | Pending |
-| SRC-09 | TBD | Pending |
-| DST-01 | TBD | Pending |
-| DST-02 | TBD | Pending |
-| DST-03 | TBD | Pending |
-| DST-04 | TBD | Pending |
-| MTH-01 | TBD | Pending |
-| MTH-02 | TBD | Pending |
-| MTH-03 | TBD | Pending |
-| MTH-04 | TBD | Pending |
-| TXP-01 | TBD | Pending |
-| TXP-02 | TBD | Pending |
-| TXP-03 | TBD | Pending |
-| TXP-04 | TBD | Pending |
-| PLT-01 | TBD | Pending |
-| PLT-02 | TBD | Pending |
-| PLT-03 | TBD | Pending |
-| DEP-01 | TBD | Pending |
-| DEP-02 | TBD | Pending |
-| DEP-03 | TBD | Pending |
-| DEP-04 | TBD | Pending |
-| UX-01 | TBD | Pending |
-| UX-02 | TBD | Pending |
-| UX-03 | TBD | Pending |
-| UX-04 | TBD | Pending |
-| UX-05 | TBD | Pending |
-| UX-06 | TBD | Pending |
-| UX-07 | TBD | Pending |
-| UX-08 | TBD | Pending |
-| UX-09 | TBD | Pending |
+| SRC-01 | Phase 2 | Pending |
+| SRC-02 | Phase 2 | Pending |
+| SRC-03 | Phase 2 | Pending |
+| SRC-04 | Phase 3 | Pending |
+| SRC-05 | Phase 3 | Pending |
+| SRC-06 | Phase 3 | Pending |
+| SRC-07 | Phase 4 | Pending |
+| SRC-08 | Phase 4 | Pending |
+| SRC-09 | Phase 4 | Pending |
+| DST-01 | Phase 3 | Pending |
+| DST-02 | Phase 3 | Pending |
+| DST-03 | Phase 4 | Pending |
+| DST-04 | Phase 4 | Pending |
+| MTH-01 | Phase 5 | Pending |
+| MTH-02 | Phase 5 | Pending |
+| MTH-03 | Phase 5 | Pending |
+| MTH-04 | Phase 5 | Pending |
+| TXP-01 | Phase 6 | Pending |
+| TXP-02 | Phase 6 | Pending |
+| TXP-03 | Phase 6 | Pending |
+| TXP-04 | Phase 6 | Pending |
+| PLT-01 | Phase 1 | Pending |
+| PLT-02 | Phase 3 | Pending |
+| PLT-03 | Phase 4 | Pending |
+| DEP-01 | Phase 1 | Pending |
+| DEP-02 | Phase 1 | Pending |
+| DEP-03 | Phase 1 | Pending |
+| DEP-04 | Phase 1 | Pending |
+| UX-01 | Phase 7 | Pending |
+| UX-02 | Phase 7 | Pending |
+| UX-03 | Phase 2 | Pending |
+| UX-04 | Phase 7 | Pending |
+| UX-05 | Phase 7 | Pending |
+| UX-06 | Phase 7 | Pending |
+| UX-07 | Phase 7 | Pending |
+| UX-08 | Phase 7 | Pending |
+| UX-09 | Phase 7 | Pending |
 
 **Coverage:**
 - v1 requirements: 37 total
-- Mapped to phases: 0
-- Unmapped: 37 (pending roadmap)
+- Mapped to phases: 37
+- Unmapped: 0
 
 ---
 *Requirements defined: 2025-03-13*
-*Last updated: 2025-03-13 after scoping session*
+*Last updated: 2026-03-13 after roadmap creation*
