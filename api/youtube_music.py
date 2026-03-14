@@ -336,19 +336,67 @@ def create_playlist_youtube_api(access_token: str, name: str, description: str =
         raise
 
 
-def add_tracks_to_playlist_youtube_api(access_token: str, playlist_id: str, video_ids: List[str]) -> int:
+def get_playlist_video_ids(access_token: str, playlist_id: str) -> set:
+    """Get all video IDs currently in a playlist.
+
+    Args:
+        access_token: OAuth access token
+        playlist_id: Playlist ID to check
+
+    Returns:
+        Set of video IDs in the playlist
+    """
+    url = "https://www.googleapis.com/youtube/v3/playlistItems"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    params = {"part": "contentDetails", "playlistId": playlist_id, "maxResults": 50}
+    video_ids = set()
+
+    try:
+        while True:
+            response = requests.get(url, headers=headers, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            for item in data.get("items", []):
+                vid = item.get("contentDetails", {}).get("videoId")
+                if vid:
+                    video_ids.add(vid)
+
+            next_page = data.get("nextPageToken")
+            if not next_page:
+                break
+            params["pageToken"] = next_page
+
+        logger.info(f"Found {len(video_ids)} existing tracks in playlist")
+        return video_ids
+    except Exception as e:
+        logger.warning(f"Error fetching playlist tracks: {e}")
+        return set()
+
+
+def add_tracks_to_playlist_youtube_api(access_token: str, playlist_id: str, video_ids: List[str], skip_duplicates: bool = True) -> int:
     """Add tracks to a YouTube playlist using YouTube Data API.
 
     Args:
         access_token: OAuth access token
         playlist_id: Target playlist ID
         video_ids: List of YouTube video IDs to add
+        skip_duplicates: If True, skip videos already in the playlist
 
     Returns:
         Number of tracks successfully added
     """
     if not video_ids:
         return 0
+
+    # Filter out duplicates if requested
+    if skip_duplicates:
+        existing = get_playlist_video_ids(access_token, playlist_id)
+        video_ids = [vid for vid in video_ids if vid not in existing]
+        if not video_ids:
+            logger.info("All tracks already in playlist, nothing to add")
+            return 0
+        logger.info(f"Adding {len(video_ids)} new tracks (skipped {len(existing)} duplicates)")
 
     url = "https://www.googleapis.com/youtube/v3/playlistItems"
     headers = {
