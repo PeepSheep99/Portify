@@ -11,6 +11,7 @@ Minimal viable product: Spotify GDPR JSON export -> YouTube Music playlists. Two
 - [x] **Phase 3: UI Polish & UX Refinements** — Icons, progress bar, dropzone visibility, playlist selection (completed 2026-03-14)
 - [x] **Phase 4: UX Overhaul & Visual Refresh** — Interaction fixes, visual redesign, mobile optimization (completed 2026-03-14)
 - [x] **Phase 5: Code Cleanup & Deployment** — Remove dead code, structure cleanup, Vercel production deployment (completed 2026-03-15)
+- [ ] **Phase 6: YouTube Music → Spotify Transfer** — Reverse transfer: read YT Music playlists, Spotify OAuth, create Spotify playlists
 
 ## Phase Details
 
