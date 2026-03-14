@@ -9,6 +9,7 @@ import { PlaylistList } from '@/components/PlaylistList';
 import { YouTubeAuthButton } from '@/components/YouTubeAuthButton';
 import { TransferProgress } from '@/components/TransferProgress';
 import { TransferResults } from '@/components/TransferResults';
+import { TransferBottomBar } from '@/components/TransferBottomBar';
 import { transferPlaylist } from '@/lib/youtubeMusic';
 import type { ParsedPlaylist } from '@/types/spotify';
 import type {
@@ -27,7 +28,7 @@ export default function Home() {
   const [transferringPlaylist, setTransferringPlaylist] =
     useState<ParsedPlaylist | null>(null);
   const [showDropzone, setShowDropzone] = useState(true);
-  const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
+  const [excludedPlaylists, setExcludedPlaylists] = useState<Set<string>>(new Set());
 
   const handlePlaylistsParsed = (newPlaylists: ParsedPlaylist[]) => {
     setPlaylists((prev) => [...prev, ...newPlaylists]);
@@ -36,24 +37,20 @@ export default function Home() {
 
   const handleClear = () => {
     setPlaylists([]);
-    setSelectedPlaylists([]);
+    setExcludedPlaylists(new Set());
     setShowDropzone(true); // Show dropzone when all cleared
   };
 
-  const togglePlaylistSelection = (playlistName: string) => {
-    setSelectedPlaylists(prev =>
-      prev.includes(playlistName)
-        ? prev.filter(n => n !== playlistName)
-        : [...prev, playlistName]
-    );
-  };
-
-  const selectAllPlaylists = () => {
-    setSelectedPlaylists(playlists.map(p => p.name));
-  };
-
-  const deselectAllPlaylists = () => {
-    setSelectedPlaylists([]);
+  const toggleExclusion = (playlistName: string) => {
+    setExcludedPlaylists(prev => {
+      const next = new Set(prev);
+      if (next.has(playlistName)) {
+        next.delete(playlistName);
+      } else {
+        next.add(playlistName);
+      }
+      return next;
+    });
   };
 
   const handleAuthenticated = (token: string) => {
@@ -104,6 +101,16 @@ export default function Home() {
     setTransferProgress(null);
   };
 
+  const handleBatchTransfer = async () => {
+    const playlistsToTransfer = playlists.filter(p => !excludedPlaylists.has(p.name));
+
+    // Transfer ALL playlists sequentially
+    for (const playlist of playlistsToTransfer) {
+      await handleTransfer(playlist);
+    }
+  };
+
+  const selectedCount = playlists.length - excludedPlaylists.size;
   const isTransferring = transferringPlaylist !== null;
 
   return (
@@ -213,15 +220,22 @@ export default function Home() {
           >
             <PlaylistList
               playlists={playlists}
-              onTransfer={oauthToken ? handleTransfer : undefined}
+              excludedIds={Array.from(excludedPlaylists)}
+              onToggleExclude={toggleExclusion}
               transferringPlaylist={transferringPlaylist}
-              selectedIds={selectedPlaylists}
-              onToggleSelect={togglePlaylistSelection}
-              onSelectAll={selectAllPlaylists}
-              onDeselectAll={deselectAllPlaylists}
             />
           </motion.section>
         </main>
+
+        {/* Fixed bottom transfer bar */}
+        {playlists.length > 0 && (
+          <TransferBottomBar
+            count={selectedCount}
+            onTransfer={handleBatchTransfer}
+            isAuthenticated={!!oauthToken}
+            isTransferring={isTransferring}
+          />
+        )}
 
         {/* Footer */}
         <motion.footer
