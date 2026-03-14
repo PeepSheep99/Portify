@@ -8,6 +8,7 @@ interface TransferProgressProps {
   progress: TransferProgressType | null;
   playlistName?: string;
   batchProgress?: { current: number; total: number } | null;
+  onDismissError?: () => void;
 }
 
 // Unified progress calculation - progress never resets between phases
@@ -25,7 +26,7 @@ function calculateUnifiedProgress(
   }
 }
 
-export function TransferProgress({ progress, playlistName, batchProgress }: TransferProgressProps) {
+export function TransferProgress({ progress, playlistName, batchProgress, onDismissError }: TransferProgressProps) {
   if (!progress) {
     return null;
   }
@@ -74,6 +75,14 @@ export function TransferProgress({ progress, playlistName, batchProgress }: Tran
           <p className="text-base text-[var(--text-secondary)]">
             {progress.error || 'An unknown error occurred'}
           </p>
+          {onDismissError && (
+            <button
+              onClick={onDismissError}
+              className="mt-4 px-6 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] font-medium hover:bg-[var(--bg-card-hover)] transition-colors"
+            >
+              Close
+            </button>
+          )}
         </div>
       </motion.div>
     );

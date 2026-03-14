@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { flushSync } from 'react-dom';
 
 const STORAGE_KEY = 'portify_oauth_token';
@@ -21,7 +21,17 @@ import type {
 
 export default function Home() {
   const [playlists, setPlaylists] = useState<ParsedPlaylist[]>([]);
-  const [oauthToken, setOauthToken] = useState<string | null>(null);
+  const [oauthToken, setOauthToken] = useState<string | null>(() => {
+    // Lazy initialization from localStorage (runs once on mount)
+    if (typeof window !== 'undefined') {
+      try {
+        return localStorage.getItem(STORAGE_KEY);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
   const [transferProgress, setTransferProgress] =
     useState<TransferProgressType | null>(null);
   const [transferResult, setTransferResult] = useState<TransferResult | null>(
@@ -32,18 +42,6 @@ export default function Home() {
   const [showDropzone, setShowDropzone] = useState(true);
   const [excludedPlaylists, setExcludedPlaylists] = useState<Set<string>>(new Set());
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
-
-  // Restore OAuth token from localStorage on mount
-  useEffect(() => {
-    try {
-      const storedToken = localStorage.getItem(STORAGE_KEY);
-      if (storedToken) {
-        setOauthToken(storedToken);
-      }
-    } catch {
-      // localStorage might be unavailable
-    }
-  }, []);
 
   const handlePlaylistsParsed = (newPlaylists: ParsedPlaylist[]) => {
     setPlaylists((prev) => [...prev, ...newPlaylists]);
@@ -116,9 +114,12 @@ export default function Home() {
         status: 'error',
         error: error instanceof Error ? error.message : 'Transfer failed',
       });
-    } finally {
-      setTransferringPlaylist(null);
+      // Keep modal open on error so user sees the message
+      // Don't clear transferringPlaylist here
+      return;
     }
+    // Only clear on success
+    setTransferringPlaylist(null);
   };
 
   const handleCloseResults = () => {
@@ -128,6 +129,12 @@ export default function Home() {
     setPlaylists([]);
     setExcludedPlaylists(new Set());
     setShowDropzone(true);
+  };
+
+  const handleDismissError = () => {
+    setTransferProgress(null);
+    setTransferringPlaylist(null);
+    setBatchProgress(null);
   };
 
   const handleBatchTransfer = async () => {
@@ -294,9 +301,9 @@ export default function Home() {
         )}
       </div>
 
-      {/* Transfer progress modal/overlay */}
+      {/* Transfer progress modal/overlay - also show on error */}
       <AnimatePresence>
-        {isTransferring && transferProgress && (
+        {(isTransferring || transferProgress?.status === 'error') && transferProgress && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -313,6 +320,7 @@ export default function Home() {
                 progress={transferProgress}
                 playlistName={transferringPlaylist?.name}
                 batchProgress={batchProgress}
+                onDismissError={handleDismissError}
               />
             </motion.div>
           </motion.div>

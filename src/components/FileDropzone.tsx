@@ -161,7 +161,7 @@ export function FileDropzone({ onPlaylistsParsed }: FileDropzoneProps) {
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--spotify-green)]/20 text-[var(--spotify-green)] text-xs font-bold flex items-center justify-center">2</span>
                   <div>
                     <p className="text-sm text-[var(--text-secondary)]">
-                      Scroll to &quot;Download your data&quot; and request <span className="text-white font-medium">Extended streaming history</span>
+                      Click <span className="text-white font-medium">Request data</span> under &quot;Account data&quot;
                     </p>
                     <p className="text-xs text-[var(--text-muted)] mt-0.5">
                       Spotify will email you a download link (usually takes a few days)

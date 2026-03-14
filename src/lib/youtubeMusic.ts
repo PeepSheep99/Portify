@@ -133,7 +133,12 @@ export async function transferPlaylist(
           if (data.status === 'complete' && data.result) {
             result = data.result;
           } else if (data.status === 'error') {
-            throw new Error(data.error || 'Transfer failed');
+            // Check if this is an auth error (401/Unauthorized)
+            const errorMsg = data.error || 'Transfer failed';
+            if (errorMsg.includes('401') || errorMsg.toLowerCase().includes('unauthorized')) {
+              throw new AuthError('Your session has expired. Please reconnect to YouTube Music.');
+            }
+            throw new Error(errorMsg);
           } else {
             // Progress update
             onProgress({
