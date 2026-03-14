@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink, Copy } from 'lucide-react';
 import { startAuth, pollAuth } from '@/lib/youtubeMusic';
 import type { AuthStatus, DeviceAuthResponse } from '@/types/youtube';
+import { Toast } from './Toast';
 
 interface YouTubeAuthButtonProps {
   onAuthenticated: (token: string) => void;
@@ -15,6 +16,7 @@ export function YouTubeAuthButton({ onAuthenticated }: YouTubeAuthButtonProps) {
   const [deviceInfo, setDeviceInfo] = useState<DeviceAuthResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [showCopied, setShowCopied] = useState(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -49,6 +51,9 @@ export function YouTubeAuthButton({ onAuthenticated }: YouTubeAuthButtonProps) {
     try {
       const response = await startAuth();
       setDeviceInfo(response);
+
+      // Auto-open verification URL in new tab
+      window.open(response.verification_url, '_blank', 'noopener,noreferrer');
 
       // Set expiration time
       const expiration = Date.now() + response.expires_in * 1000;
@@ -105,6 +110,8 @@ export function YouTubeAuthButton({ onAuthenticated }: YouTubeAuthButtonProps) {
   const handleCopyCode = () => {
     if (deviceInfo?.user_code) {
       navigator.clipboard.writeText(deviceInfo.user_code);
+      setShowCopied(true);
+      setTimeout(() => setShowCopied(false), 2000);
     }
   };
 
@@ -255,6 +262,9 @@ export function YouTubeAuthButton({ onAuthenticated }: YouTubeAuthButtonProps) {
           </div>
         </motion.div>
       )}
+
+      {/* Toast notification for copy feedback */}
+      <Toast message="Copied!" isVisible={showCopied} />
 
       {/* Connected state: show success */}
       {authStatus === 'connected' && (
