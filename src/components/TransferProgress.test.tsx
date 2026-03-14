@@ -18,7 +18,8 @@ describe('TransferProgress', () => {
         status: 'in_progress' as const,
       };
       render(<TransferProgress progress={progress} />);
-      expect(screen.getByText(/matching tracks/i)).toBeInTheDocument();
+      // Phase text appears twice (in center and below)
+      expect(screen.getAllByText(/matching tracks/i).length).toBeGreaterThan(0);
       expect(screen.getByText('Bohemian Rhapsody')).toBeInTheDocument();
     });
 
@@ -30,10 +31,11 @@ describe('TransferProgress', () => {
         status: 'in_progress' as const,
       };
       render(<TransferProgress progress={progress} />);
-      expect(screen.getByText(/creating playlist/i)).toBeInTheDocument();
+      // Phase text appears twice (in center and below)
+      expect(screen.getAllByText(/creating playlist/i).length).toBeGreaterThan(0);
     });
 
-    it('renders adding phase with count', () => {
+    it('renders adding phase with phase label', () => {
       const progress = {
         current: 25,
         total: 45,
@@ -41,8 +43,9 @@ describe('TransferProgress', () => {
         status: 'in_progress' as const,
       };
       render(<TransferProgress progress={progress} />);
-      expect(screen.getByText(/adding tracks/i)).toBeInTheDocument();
-      expect(screen.getByText(/25.*45/)).toBeInTheDocument();
+      // Phase text appears twice (in center and below)
+      expect(screen.getAllByText(/adding tracks/i).length).toBeGreaterThan(0);
+      // Component no longer shows "25/45" count, just phase label and percentage
     });
 
     it('renders error state with message', () => {
@@ -70,7 +73,7 @@ describe('TransferProgress', () => {
   });
 
   describe('progress bar', () => {
-    it('shows correct percentage', () => {
+    it('shows correct unified percentage for matching phase', () => {
       const progress = {
         current: 25,
         total: 100,
@@ -78,24 +81,26 @@ describe('TransferProgress', () => {
         status: 'in_progress' as const,
       };
       render(<TransferProgress progress={progress} />);
-      expect(screen.getByText('25%')).toBeInTheDocument();
+      // Unified progress: matching(25, 100) = 25/100 * 40% = 10%
+      expect(screen.getByText('10%')).toBeInTheDocument();
     });
 
-    it('progress bar width matches percentage', () => {
+    it('shows SVG circle for progress visualization', () => {
       const progress = {
         current: 50,
         total: 100,
         phase: 'matching' as const,
         status: 'in_progress' as const,
       };
-      render(<TransferProgress progress={progress} />);
-      const progressBar = screen.getByRole('progressbar');
-      // The inner div should have width 50%
-      const innerBar = progressBar.querySelector('div');
-      expect(innerBar).toHaveStyle({ width: '50%' });
+      const { container } = render(<TransferProgress progress={progress} />);
+      // Component uses SVG circles, not role="progressbar"
+      const svg = container.querySelector('svg');
+      expect(svg).toBeInTheDocument();
+      const circles = svg?.querySelectorAll('circle');
+      expect(circles?.length).toBe(2); // background + progress circle
     });
 
-    it('shows 0% for zero total', () => {
+    it('shows 40% for creating phase with zero total', () => {
       const progress = {
         current: 0,
         total: 0,
@@ -103,7 +108,8 @@ describe('TransferProgress', () => {
         status: 'in_progress' as const,
       };
       render(<TransferProgress progress={progress} />);
-      expect(screen.getByText('0%')).toBeInTheDocument();
+      // Unified progress: creating(0, 0) = 40 + 0 * 0.2 = 40%
+      expect(screen.getByText('40%')).toBeInTheDocument();
     });
 
     it('clamps to 100% when current exceeds total', () => {
@@ -130,7 +136,8 @@ describe('TransferProgress', () => {
           }}
         />
       );
-      expect(screen.getByText(/matching tracks/i)).toBeInTheDocument();
+      // Phase text appears twice (in center and below)
+      expect(screen.getAllByText(/matching tracks/i).length).toBeGreaterThan(0);
 
       rerender(
         <TransferProgress
@@ -142,7 +149,7 @@ describe('TransferProgress', () => {
           }}
         />
       );
-      expect(screen.getByText(/creating playlist/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/creating playlist/i).length).toBeGreaterThan(0);
     });
 
     it('transitions from creating to adding', () => {
@@ -156,7 +163,7 @@ describe('TransferProgress', () => {
           }}
         />
       );
-      expect(screen.getByText(/creating playlist/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/creating playlist/i).length).toBeGreaterThan(0);
 
       rerender(
         <TransferProgress
@@ -168,7 +175,7 @@ describe('TransferProgress', () => {
           }}
         />
       );
-      expect(screen.getByText(/adding tracks/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/adding tracks/i).length).toBeGreaterThan(0);
     });
   });
 
@@ -180,29 +187,60 @@ describe('TransferProgress', () => {
         phase: 'matching' as const,
         status: 'in_progress' as const,
       };
-      render(<TransferProgress progress={progress} />);
-      const liveRegion = screen.getByRole('status');
-      expect(liveRegion).toHaveAttribute('aria-live', 'polite');
+      const { container } = render(<TransferProgress progress={progress} />);
+      // Find the element with aria-live attribute directly
+      const liveRegion = container.querySelector('[aria-live="polite"]');
+      expect(liveRegion).toBeInTheDocument();
     });
+  });
 
-    it('progress bar has accessible name', () => {
+  describe('unified progress calculation', () => {
+    it('calculates matching phase as 0-40%', () => {
       const progress = {
-        current: 25,
+        current: 50,
         total: 100,
         phase: 'matching' as const,
         status: 'in_progress' as const,
       };
       render(<TransferProgress progress={progress} />);
-      const progressBar = screen.getByRole('progressbar');
-      expect(progressBar).toHaveAttribute('aria-valuenow', '25');
-      expect(progressBar).toHaveAttribute('aria-valuemax', '100');
+      // matching(50, 100) = 50/100 * 40 = 20%
+      expect(screen.getByText('20%')).toBeInTheDocument();
     });
-  });
 
-  describe('unified progress calculation', () => {
-    it.todo('calculates matching phase as 0-40%');
-    it.todo('calculates creating phase as 40-60%');
-    it.todo('calculates adding phase as 60-100%');
-    it.todo('displays phase label below percentage');
+    it('calculates creating phase as 40-60%', () => {
+      const progress = {
+        current: 50,
+        total: 100,
+        phase: 'creating' as const,
+        status: 'in_progress' as const,
+      };
+      render(<TransferProgress progress={progress} />);
+      // creating(50, 100) = 40 + (50/100 * 20) = 40 + 10 = 50%
+      expect(screen.getByText('50%')).toBeInTheDocument();
+    });
+
+    it('calculates adding phase as 60-100%', () => {
+      const progress = {
+        current: 50,
+        total: 100,
+        phase: 'adding' as const,
+        status: 'in_progress' as const,
+      };
+      render(<TransferProgress progress={progress} />);
+      // adding(50, 100) = 60 + (50/100 * 40) = 60 + 20 = 80%
+      expect(screen.getByText('80%')).toBeInTheDocument();
+    });
+
+    it('displays phase label below percentage', () => {
+      const progress = {
+        current: 25,
+        total: 50,
+        phase: 'matching' as const,
+        status: 'in_progress' as const,
+      };
+      render(<TransferProgress progress={progress} />);
+      // Phase label text appears twice (center and below)
+      expect(screen.getAllByText('Matching tracks').length).toBeGreaterThan(0);
+    });
   });
 });

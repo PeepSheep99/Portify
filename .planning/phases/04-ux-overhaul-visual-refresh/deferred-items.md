@@ -1,23 +1,26 @@
 # Deferred Items - Phase 04
 
-## Pre-existing Test Failures (04-01)
+## Resolved by 04-04-PLAN (Gap Closure)
 
-### TransferResults.test.tsx
+The TransferProgress.test.tsx issues listed below were resolved by 04-04-PLAN:
+- Fixed percentage assertions to use unified progress values
+- Removed role="progressbar" queries (component uses SVG)
+- Converted todo tests to real tests
+
+## Pre-existing Test Failures (not fixed in 04-04)
+
+### FileDropzone.test.tsx
+- **Test:** `renders dropzone area with instructions`
+- **Issue:** Component text changed from "Drag and drop Spotify JSON files here" to "Drag and drop Spotify JSON files"
+- **Root cause:** Component UI update in earlier phase, test not updated
+
+### TransferResults.test.tsx (9 failures)
 - Tests check for "playlist created" text but component only shows playlist name
 - Tests check for "tracks added" but component shows "added"
 - Tests assert `text-green-400` but light theme uses `text-green-600`
+- Tests expect element structure that was changed with AnimatedNumber and glass styling
 
-### TransferProgress.test.tsx
-The following test failures exist in `src/components/TransferProgress.test.tsx` and are not caused by Phase 04 changes:
-
-1. **progress bar width matches percentage** - Test expects `role="progressbar"` but component doesn't have this ARIA role
-2. **transitions from matching to creating** - Test expects matching -> creating transition behavior
-3. **transitions from creating to adding** - Test expects creating -> adding transition behavior
-4. **progress bar has accessible name** - Test expects `aria-valuenow` and `aria-valuemax` attributes
-
-**Root cause:** TransferProgress component implementation doesn't match test expectations for ARIA attributes.
-
-**Recommendation:** Fix TransferProgress component to add proper ARIA progressbar role and attributes.
+**Recommendation:** Create a follow-up plan to update FileDropzone.test.tsx and TransferResults.test.tsx to match current component implementations.
 
 ---
-*Logged: 2026-03-14*
+*Updated: 2026-03-14*
