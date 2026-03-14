@@ -114,6 +114,23 @@ Plans:
   4. App deploys successfully to Vercel
   5. Production app works end-to-end (upload -> auth -> transfer)
 
+### Phase 6: YouTube Music → Spotify Transfer
+**Goal:** Enable reverse transfer from YouTube Music to Spotify (bidirectional capability)
+**Depends on:** Phase 5
+**Requirements**: REV-01, REV-02, REV-03, REV-04, REV-05, REV-06
+**Plans:** 0 plans
+
+Plans:
+- [ ] (to be planned)
+
+**Success Criteria**:
+  1. User can read playlists from YouTube Music via authenticated API
+  2. User can authenticate with Spotify OAuth
+  3. System matches YouTube Music tracks to Spotify catalog
+  4. User can create Spotify playlists with matched tracks
+  5. User sees progress during reverse transfer
+  6. User sees summary of reverse transfer results
+
 ## Progress
 
 | Phase | Plans | Status |
@@ -123,6 +140,7 @@ Plans:
 | 3. UI Polish & UX Refinements | 3/3 | Complete |
 | 4. UX Overhaul & Visual Refresh | 6/6 | Complete |
 | 5. Code Cleanup & Deployment | 3/3 | Complete |
+| 6. YouTube Music → Spotify Transfer | 0/? | Planning |
 
 ---
 *Roadmap created: 2026-03-13*

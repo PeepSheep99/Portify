@@ -41,9 +41,17 @@
 - [x] **DEP-01**: App hosted on Vercel (free tier)
 - [x] **DEP-02**: YouTube Music calls via Python serverless
 
+### Reverse Transfer (YouTube Music → Spotify)
+
+- [ ] **REV-01**: User can read playlists from YouTube Music account
+- [ ] **REV-02**: User can connect Spotify account via OAuth
+- [ ] **REV-03**: System matches YouTube Music tracks to Spotify catalog
+- [ ] **REV-04**: User can create Spotify playlists with matched tracks
+- [ ] **REV-05**: User sees progress during reverse transfer
+- [ ] **REV-06**: User sees summary of reverse transfer results
+
 ## v2 Requirements (Future)
 
-- YouTube Music → Spotify (bidirectional)
 - Apple Music support
 - ISRC-based matching
 - Polished UI, dark mode
@@ -54,8 +62,7 @@
 | Feature | Reason |
 |---------|--------|
 | Apple Music | Adds extension complexity |
-| Spotify API | ToS prohibits; using JSON export |
-| Bidirectional | MVP is one-way only |
+| Spotify API | ToS prohibits for read; we use OAuth for write |
 | Polished UI | Functional > beautiful for v1 |
 
 ## Traceability
@@ -83,10 +90,16 @@
 | UX-09 | Phase 4 | Complete |
 | UX-10 | Phase 4 | Complete |
 | UX-11 | Phase 4 | Complete |
+| REV-01 | Phase 6 | Pending |
+| REV-02 | Phase 6 | Pending |
+| REV-03 | Phase 6 | Pending |
+| REV-04 | Phase 6 | Pending |
+| REV-05 | Phase 6 | Pending |
+| REV-06 | Phase 6 | Pending |
 
 **Coverage:**
-- v1 requirements: 21 total
-- Mapped to phases: 21
+- v1 requirements: 27 total
+- Mapped to phases: 27
 - Unmapped: 0
 
 ---
