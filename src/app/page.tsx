@@ -12,7 +12,7 @@ import { YouTubeAuthButton } from '@/components/YouTubeAuthButton';
 import { TransferProgress } from '@/components/TransferProgress';
 import { TransferResults } from '@/components/TransferResults';
 import { TransferBottomBar } from '@/components/TransferBottomBar';
-import { transferPlaylist, AuthError } from '@/lib/youtubeMusic';
+import { transferPlaylist, validateToken, AuthError } from '@/lib/youtubeMusic';
 import type { ParsedPlaylist } from '@/types/spotify';
 import type {
   TransferProgress as TransferProgressType,
@@ -83,6 +83,12 @@ export default function Home() {
     setTransferResult(null);
 
     try {
+      // Fail-fast: validate token before starting transfer
+      const isValid = await validateToken(oauthToken);
+      if (!isValid) {
+        throw new AuthError('Your session has expired. Please reconnect to YouTube Music.');
+      }
+
       const result = await transferPlaylist(oauthToken, playlist, (progress) => {
         // Force immediate render for smooth progress updates
         flushSync(() => {

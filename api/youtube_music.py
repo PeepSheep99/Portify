@@ -204,6 +204,34 @@ def get_access_token(oauth_token_json: str) -> str:
     return token_data['access_token']
 
 
+def validate_oauth_token(oauth_token_json: str) -> bool:
+    """Validate an OAuth token by making a lightweight API call.
+
+    Calls the YouTube channels endpoint to check if the token is valid.
+
+    Args:
+        oauth_token_json: JSON string containing OAuth token data
+
+    Returns:
+        True if token is valid, False otherwise
+    """
+    try:
+        access_token = get_access_token(oauth_token_json)
+
+        # Make a lightweight API call to check token validity
+        url = "https://www.googleapis.com/youtube/v3/channels"
+        params = {"part": "id", "mine": "true"}
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        response = requests.get(url, params=params, headers=headers)
+
+        # 200 = valid, 401 = invalid/expired
+        return response.status_code == 200
+    except Exception as e:
+        logger.warning(f"Token validation failed: {e}")
+        return False
+
+
 def create_playlist_youtube_api(access_token: str, name: str, description: str = "") -> str:
     """Create a new playlist using YouTube Data API.
 

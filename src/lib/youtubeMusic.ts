@@ -60,6 +60,30 @@ export async function pollAuth(deviceCode: string): Promise<PollAuthResponse> {
 }
 
 /**
+ * Validate an OAuth token by making a lightweight API call.
+ * Returns true if valid, false if invalid/expired.
+ */
+export async function validateToken(token: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_BASE}/auth/validate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ oauth_token: token }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.valid === true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Transfer a playlist to YouTube Music.
  * Streams progress updates via SSE and returns the final result.
  */
@@ -151,7 +175,12 @@ export async function transferPlaylist(
             });
           }
         } catch (e) {
-          if (e instanceof Error && e.message !== 'Transfer failed') {
+          // Re-throw AuthError and intentional errors
+          if (e instanceof AuthError) {
+            throw e;
+          }
+          // Only log actual JSON parse errors, re-throw everything else
+          if (e instanceof SyntaxError) {
             console.error('Failed to parse SSE event:', e);
           } else {
             throw e;

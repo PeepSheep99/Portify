@@ -30,6 +30,7 @@ from api.youtube_music import (
     get_access_token,
     create_playlist_youtube_api,
     add_tracks_to_playlist_youtube_api,
+    validate_oauth_token,
 )
 from api.track_matcher import match_tracks
 
@@ -110,6 +111,30 @@ def youtube_auth_poll(request: PollAuthRequest):
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to poll auth: {str(e)}")
+
+
+class ValidateTokenRequest(BaseModel):
+    """Request body for token validation."""
+    oauth_token: str
+
+
+@app.post("/api/youtube/auth/validate")
+def youtube_auth_validate(request: ValidateTokenRequest):
+    """Validate an OAuth token by making a lightweight API call.
+
+    Args:
+        oauth_token: OAuth token JSON string to validate
+
+    Returns:
+        {"valid": true} if token is valid
+        {"valid": false} if token is invalid or expired
+    """
+    try:
+        is_valid = validate_oauth_token(request.oauth_token)
+        return {"valid": is_valid}
+    except Exception as e:
+        logger.warning(f"Token validation error: {e}")
+        return {"valid": False}
 
 
 # Transfer endpoint
