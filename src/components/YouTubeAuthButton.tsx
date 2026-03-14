@@ -14,7 +14,8 @@ interface YouTubeAuthButtonProps {
 }
 
 export function YouTubeAuthButton({ onAuthenticated, isAuthenticated = false }: YouTubeAuthButtonProps) {
-  const [authStatus, setAuthStatus] = useState<AuthStatus>(isAuthenticated ? 'connected' : 'disconnected');
+  // Always start as disconnected - effectiveStatus derives from isAuthenticated prop
+  const [authStatus, setAuthStatus] = useState<AuthStatus>('disconnected');
   const [deviceInfo, setDeviceInfo] = useState<DeviceAuthResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
