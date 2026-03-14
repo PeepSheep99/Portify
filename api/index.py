@@ -256,7 +256,14 @@ def transfer_stream_generator(request: TransferRequest) -> Generator[str, None, 
         time.sleep(0.01)
 
         logger.info("Creating playlist via YouTube Data API...")
-        playlist_id = create_playlist_youtube_api(access_token, request.playlist.name)
+        playlist_id, already_existed = create_playlist_youtube_api(access_token, request.playlist.name)
+
+        # If playlist already exists, skip and return early
+        if already_existed:
+            logger.info(f"Playlist '{request.playlist.name}' already exists, skipping")
+            yield f"data: {json.dumps({'status': 'complete', 'result': {'playlist_name': request.playlist.name, 'skipped': True, 'reason': 'Playlist already exists', 'matched': len(matched_tracks), 'unmatched': len(unmatched_tracks), 'added': 0}})}\n\n"
+            return
+
         logger.info(f"Playlist created: {playlist_id}")
 
         # Phase 3: Add tracks using YouTube Data API

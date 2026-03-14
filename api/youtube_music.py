@@ -271,7 +271,7 @@ def find_playlist_by_name(access_token: str, name: str) -> Optional[str]:
         return None
 
 
-def create_playlist_youtube_api(access_token: str, name: str, description: str = "", check_existing: bool = True) -> str:
+def create_playlist_youtube_api(access_token: str, name: str, description: str = "", check_existing: bool = True) -> tuple:
     """Create a new playlist using YouTube Data API.
 
     YouTube Music's internal API doesn't accept OAuth tokens from TV-type clients,
@@ -281,22 +281,24 @@ def create_playlist_youtube_api(access_token: str, name: str, description: str =
         access_token: OAuth access token
         name: Playlist name
         description: Optional playlist description
-        check_existing: If True, return existing playlist ID if one with same name exists
+        check_existing: If True, skip if playlist with same name exists
 
     Returns:
-        Playlist ID of the created or existing playlist
+        Tuple of (playlist_id, already_existed)
+        - playlist_id: ID of created playlist, or None if skipped
+        - already_existed: True if playlist was skipped because it exists
 
     Raises:
         Exception: If playlist creation fails
     """
     import traceback
 
-    # Check for existing playlist with same name
+    # Check for existing playlist with same name - skip if exists
     if check_existing:
         existing_id = find_playlist_by_name(access_token, name)
         if existing_id:
-            logger.info(f"Reusing existing playlist '{name}': {existing_id}")
-            return existing_id
+            logger.info(f"Playlist '{name}' already exists, skipping")
+            return (None, True)
 
     if not description:
         description = "Imported from Spotify using Portify"
@@ -324,7 +326,7 @@ def create_playlist_youtube_api(access_token: str, name: str, description: str =
         data = response.json()
         playlist_id = data.get('id')
         logger.info(f"Created playlist: {playlist_id}")
-        return playlist_id
+        return (playlist_id, False)
     except requests.exceptions.HTTPError as e:
         logger.error(f"Playlist creation failed: {e}")
         logger.error(f"Response: {e.response.text if e.response else 'No response'}")
