@@ -102,7 +102,7 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — ESLint cleanup + dead code removal
+- [x] 05-01-PLAN.md — ESLint cleanup + dead code removal
 - [ ] 05-02-PLAN.md — Fix failing frontend tests (update assertions)
 - [ ] 05-03-PLAN.md — Python requirements split + Vercel deployment
 
@@ -121,7 +121,7 @@ Plans:
 | 2. YouTube Music + Transfer | 4/4 | Complete |
 | 3. UI Polish & UX Refinements | 3/3 | Complete |
 | 4. UX Overhaul & Visual Refresh | 6/6 | Complete |
-| 5. Code Cleanup & Deployment | 0/3 | Planned |
+| 5. Code Cleanup & Deployment | 1/3 | In Progress |
 
 ---
 *Roadmap created: 2026-03-13*
