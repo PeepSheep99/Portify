@@ -38,9 +38,9 @@ describe('FileDropzone', () => {
     render(<FileDropzone onPlaylistsParsed={mockOnPlaylistsParsed} />);
 
     expect(
-      screen.getByText('Drag and drop Spotify JSON files here')
+      screen.getByText('Upload your Spotify data export')
     ).toBeInTheDocument();
-    expect(screen.getByText('or click to select files')).toBeInTheDocument();
+    expect(screen.getByText('Drop files or click to browse')).toBeInTheDocument();
   });
 
   it('has file input that accepts JSON files', () => {
