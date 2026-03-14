@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portify
 
-## Getting Started
+Transfer your Spotify playlists to YouTube Music in minutes.
 
-First, run the development server:
+**[Try it live](https://portify-teal.vercel.app)**
+
+## Features
+
+- Upload your Spotify data export (JSON files)
+- Connect to YouTube Music via Google OAuth
+- Automatically match tracks and create playlists
+- Real-time progress tracking
+- Works on desktop and mobile
+
+## How It Works
+
+1. **Export your Spotify data** - Go to [Spotify Privacy Settings](https://www.spotify.com/account/privacy/) and request "Account data"
+2. **Upload JSON files** - Drop your `Playlist*.json` or `YourLibrary.json` files
+3. **Connect YouTube Music** - Sign in with your Google account
+4. **Transfer** - Click transfer and watch your playlists migrate
+
+## Tech Stack
+
+- **Frontend**: Next.js 16, React, Tailwind CSS, Framer Motion
+- **Backend**: Python FastAPI (serverless on Vercel)
+- **APIs**: YouTube Data API, Google OAuth Device Flow
+
+## Local Development
 
 ```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Add your GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Privacy
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Your data stays in your browser. We don't store any playlists or tokens on our servers. See our [Privacy Policy](https://portify-teal.vercel.app/privacy).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Author
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Made with love by Navneet
