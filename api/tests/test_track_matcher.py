@@ -193,11 +193,11 @@ class TestTrackSearch:
         assert 'Test Artist' in query
         assert 'Test Song' in query
 
-    def test_search_track_handles_api_error(self, mock_ytmusic):
-        """search_track handles API errors gracefully."""
+    def test_search_track_raises_on_api_error(self, mock_ytmusic):
+        """search_track raises exception on API errors for caller to handle."""
         mock_ytmusic.search.side_effect = Exception("API Error")
-        result = search_track(mock_ytmusic, 'Test Song', 'Test Artist')
-        assert result is None
+        with pytest.raises(Exception, match="API Error"):
+            search_track(mock_ytmusic, 'Test Song', 'Test Artist')
 
     def test_search_track_limits_results(self, mock_ytmusic):
         """search_track limits API response to reasonable number."""

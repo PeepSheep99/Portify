@@ -6,7 +6,8 @@ from unittest.mock import patch, MagicMock
 from api.youtube_music import (
     start_device_auth,
     poll_device_auth,
-    get_ytmusic_client,
+    get_ytmusic_client_for_search,
+    get_access_token,
     get_oauth_credentials,
     SCOPES
 )
@@ -165,57 +166,40 @@ class TestDeviceAuthPolling:
 
 
 class TestYTMusicClient:
-    """Test YTMusic client creation."""
+    """Test YTMusic client creation for search."""
 
     @patch('ytmusicapi.YTMusic')
-    @patch('ytmusicapi.OAuthCredentials')
-    @patch.dict('os.environ', {
-        'GOOGLE_CLIENT_ID': 'test_client_id',
-        'GOOGLE_CLIENT_SECRET': 'test_client_secret'
-    })
-    def test_get_ytmusic_client_creates_authenticated_instance(
-        self, mock_credentials_class, mock_ytmusic_class, sample_oauth_token
+    def test_get_ytmusic_client_for_search_creates_unauthenticated_instance(
+        self, mock_ytmusic_class
     ):
-        """get_ytmusic_client returns YTMusic instance with auth."""
+        """get_ytmusic_client_for_search returns unauthenticated YTMusic instance."""
         mock_ytmusic_instance = MagicMock()
         mock_ytmusic_class.return_value = mock_ytmusic_instance
 
-        result = get_ytmusic_client(sample_oauth_token)
+        result = get_ytmusic_client_for_search()
 
-        mock_ytmusic_class.assert_called_once()
+        # Called with no arguments (unauthenticated mode)
+        mock_ytmusic_class.assert_called_once_with()
         assert result == mock_ytmusic_instance
 
-    @patch('ytmusicapi.YTMusic')
-    @patch('ytmusicapi.OAuthCredentials')
-    @patch.dict('os.environ', {
-        'GOOGLE_CLIENT_ID': 'test_client_id',
-        'GOOGLE_CLIENT_SECRET': 'test_client_secret'
-    })
-    def test_get_ytmusic_client_validates_token(
-        self, mock_credentials_class, mock_ytmusic_class, sample_oauth_token
-    ):
-        """get_ytmusic_client passes token to YTMusic."""
-        get_ytmusic_client(sample_oauth_token)
 
-        # Verify YTMusic was called with the token string
-        call_args = mock_ytmusic_class.call_args
-        assert sample_oauth_token in call_args.args or sample_oauth_token == call_args.args[0]
+class TestAccessToken:
+    """Test access token extraction."""
 
-    @patch.dict('os.environ', {
-        'GOOGLE_CLIENT_ID': 'test_client_id',
-        'GOOGLE_CLIENT_SECRET': 'test_client_secret'
-    })
-    def test_get_ytmusic_client_handles_invalid_token(self):
-        """get_ytmusic_client raises error for invalid token."""
-        # YTMusic will fail to parse invalid JSON
+    def test_get_access_token_extracts_token(self, sample_oauth_token):
+        """get_access_token extracts access_token from JSON."""
+        result = get_access_token(sample_oauth_token)
+        assert result == 'test_access_token'
+
+    def test_get_access_token_handles_invalid_json(self):
+        """get_access_token raises error for invalid JSON."""
         with pytest.raises(Exception):
-            get_ytmusic_client('not-valid-json')
+            get_access_token('not-valid-json')
 
-    @patch.dict('os.environ', {}, clear=True)
-    def test_get_ytmusic_client_handles_missing_credentials(self, sample_oauth_token):
-        """get_ytmusic_client raises error when credentials missing."""
-        with pytest.raises(ValueError, match='Missing Google OAuth credentials'):
-            get_ytmusic_client(sample_oauth_token)
+    def test_get_access_token_handles_missing_token(self):
+        """get_access_token raises error when access_token missing."""
+        with pytest.raises(KeyError):
+            get_access_token('{"refresh_token": "test"}')
 
 
 class TestOAuthCredentials:

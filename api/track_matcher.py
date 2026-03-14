@@ -1,7 +1,7 @@
 """Track matching logic for finding Spotify tracks on YouTube Music (MTH-01, MTH-02)."""
 import re
 import time
-from typing import TypedDict, NotRequired
+from typing import TypedDict, List, Optional
 
 from unidecode import unidecode
 from rapidfuzz import fuzz
@@ -22,8 +22,8 @@ class UnmatchedTrack(TypedDict):
 
 class MatchResult(TypedDict):
     """Result of batch track matching."""
-    matched: list[MatchedTrack]
-    unmatched: list[UnmatchedTrack]
+    matched: List[MatchedTrack]
+    unmatched: List[UnmatchedTrack]
     total: int
     match_rate: float
 
@@ -114,7 +114,7 @@ def search_track(
     track_name: str,
     artist_name: str,
     min_confidence: float = 70
-) -> dict | None:
+) -> Optional[dict]:
     """Search for a track on YouTube Music using tiered search.
 
     Tier 1: Search "{artist_name} {track_name}" with filter='songs'
@@ -130,33 +130,47 @@ def search_track(
         Best matching result with videoId, title, artist, confidence
         or None if no match meets threshold
     """
+    import sys
+
     try:
         # Tier 1: Search with artist and title
         query = f"{artist_name} {track_name}"
+        print(f"[DEBUG search_track] Tier 1 search: '{query}'", file=sys.stderr, flush=True)
         results = ytmusic.search(query, filter='songs', limit=5)
+        print(f"[DEBUG search_track] Tier 1 results count: {len(results) if results else 0}", file=sys.stderr, flush=True)
 
         best_match = _find_best_match(results, track_name, artist_name, min_confidence)
         if best_match:
+            print(f"[DEBUG search_track] Tier 1 match found", file=sys.stderr, flush=True)
             return best_match
 
         # Tier 2: Search with title only
+        print(f"[DEBUG search_track] Tier 2 search: '{track_name}'", file=sys.stderr, flush=True)
         results = ytmusic.search(track_name, filter='songs', limit=10)
+        print(f"[DEBUG search_track] Tier 2 results count: {len(results) if results else 0}", file=sys.stderr, flush=True)
         best_match = _find_best_match(results, track_name, artist_name, min_confidence)
         if best_match:
+            print(f"[DEBUG search_track] Tier 2 match found", file=sys.stderr, flush=True)
             return best_match
 
+        print(f"[DEBUG search_track] No match found", file=sys.stderr, flush=True)
         return None
 
-    except Exception:
-        return None
+    except Exception as e:
+        print(f"[DEBUG search_track] EXCEPTION: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        # Re-raise the exception instead of silently returning None
+        # This allows the caller to see the actual error
+        raise
 
 
 def _find_best_match(
-    results: list[dict],
+    results: List[dict],
     track_name: str,
     artist_name: str,
     min_confidence: float
-) -> dict | None:
+) -> Optional[dict]:
     """Find the best matching result from a search.
 
     Args:
@@ -202,7 +216,7 @@ def _find_best_match(
 
 def match_tracks(
     ytmusic,
-    tracks: list[dict],
+    tracks: List[dict],
     min_confidence: float = 70,
     delay_ms: int = 150,
     progress_callback=None
@@ -221,8 +235,8 @@ def match_tracks(
     Returns:
         MatchResult with matched, unmatched, total, and match_rate
     """
-    matched: list[MatchedTrack] = []
-    unmatched: list[UnmatchedTrack] = []
+    matched: List[MatchedTrack] = []
+    unmatched: List[UnmatchedTrack] = []
     total = len(tracks)
 
     if total == 0:

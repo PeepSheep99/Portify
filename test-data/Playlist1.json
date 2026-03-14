@@ -1,0 +1,148 @@
+{
+  "playlists": [
+    {
+      "name": "Chill Vibes",
+      "lastModifiedDate": "2024-12-15",
+      "items": [
+        {
+          "track": {
+            "trackName": "Blinding Lights",
+            "artistName": "The Weeknd",
+            "albumName": "After Hours"
+          },
+          "addedDate": "2024-01-15"
+        },
+        {
+          "track": {
+            "trackName": "Levitating",
+            "artistName": "Dua Lipa",
+            "albumName": "Future Nostalgia"
+          },
+          "addedDate": "2024-02-20"
+        },
+        {
+          "track": {
+            "trackName": "Stay",
+            "artistName": "The Kid LAROI, Justin Bieber",
+            "albumName": "F*CK LOVE 3: OVER YOU"
+          },
+          "addedDate": "2024-03-10"
+        },
+        {
+          "track": {
+            "trackName": "Heat Waves",
+            "artistName": "Glass Animals",
+            "albumName": "Dreamland"
+          },
+          "addedDate": "2024-04-05"
+        },
+        {
+          "track": {
+            "trackName": "As It Was",
+            "artistName": "Harry Styles",
+            "albumName": "Harry's House"
+          },
+          "addedDate": "2024-05-18"
+        }
+      ],
+      "description": "Perfect for relaxing evenings",
+      "numberOfFollowers": 0
+    },
+    {
+      "name": "Workout Mix",
+      "lastModifiedDate": "2024-11-20",
+      "items": [
+        {
+          "track": {
+            "trackName": "Lose Yourself",
+            "artistName": "Eminem",
+            "albumName": "8 Mile Soundtrack"
+          },
+          "addedDate": "2023-06-01"
+        },
+        {
+          "track": {
+            "trackName": "Stronger",
+            "artistName": "Kanye West",
+            "albumName": "Graduation"
+          },
+          "addedDate": "2023-07-15"
+        },
+        {
+          "track": {
+            "trackName": "Till I Collapse",
+            "artistName": "Eminem",
+            "albumName": "The Eminem Show"
+          },
+          "addedDate": "2023-08-22"
+        },
+        {
+          "track": {
+            "trackName": "Eye of the Tiger",
+            "artistName": "Survivor",
+            "albumName": "Eye of the Tiger"
+          },
+          "addedDate": "2023-09-10"
+        }
+      ],
+      "description": "Get pumped!",
+      "numberOfFollowers": 0
+    },
+    {
+      "name": "Road Trip Classics",
+      "lastModifiedDate": "2024-08-30",
+      "items": [
+        {
+          "track": {
+            "trackName": "Bohemian Rhapsody",
+            "artistName": "Queen",
+            "albumName": "A Night at the Opera"
+          },
+          "addedDate": "2022-01-01"
+        },
+        {
+          "track": {
+            "trackName": "Hotel California",
+            "artistName": "Eagles",
+            "albumName": "Hotel California"
+          },
+          "addedDate": "2022-02-14"
+        },
+        {
+          "track": {
+            "trackName": "Sweet Home Alabama",
+            "artistName": "Lynyrd Skynyrd",
+            "albumName": "Second Helping"
+          },
+          "addedDate": "2022-03-20"
+        },
+        {
+          "track": {
+            "trackName": "Don't Stop Believin'",
+            "artistName": "Journey",
+            "albumName": "Escape"
+          },
+          "addedDate": "2022-04-18"
+        },
+        {
+          "track": {
+            "trackName": "Take It Easy",
+            "artistName": "Eagles",
+            "albumName": "Eagles"
+          },
+          "addedDate": "2022-05-25"
+        },
+        {
+          "track": {
+            "trackName": "Life Is a Highway",
+            "artistName": "Tom Cochrane",
+            "albumName": "Mad Mad World"
+          },
+          "addedDate": "2022-06-30"
+        }
+      ],
+      "description": "Songs for the open road",
+      "numberOfFollowers": 0
+    }
+  ]
+}

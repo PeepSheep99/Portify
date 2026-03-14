@@ -2,6 +2,19 @@
 
 # dependencies
 /node_modules
+/venv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
 /.pnp
 .pnp.*
 .yarn/*
@@ -39,3 +52,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel
+.env.local
+.env

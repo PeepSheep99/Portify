@@ -6,8 +6,11 @@ the frontend for storage since Vercel serverless functions are stateless.
 """
 import os
 import json
+import logging
 import requests
-from typing import TypedDict
+from typing import TypedDict, Optional, Tuple, List
+
+logger = logging.getLogger(__name__)
 
 
 # Google OAuth endpoints
@@ -33,11 +36,11 @@ class DeviceAuthResponse(TypedDict):
 class PollAuthResult(TypedDict):
     """Result from polling device auth."""
     status: str  # 'pending' | 'complete' | 'error'
-    token: str | None  # OAuth token JSON string when complete
-    error: str | None  # Error message when error
+    token: Optional[str]  # OAuth token JSON string when complete
+    error: Optional[str]  # Error message when error
 
 
-def get_oauth_credentials() -> tuple[str, str]:
+def get_oauth_credentials() -> Tuple[str, str]:
     """Get OAuth credentials from environment variables.
 
     Returns:
@@ -174,37 +177,41 @@ def poll_device_auth(device_code: str) -> PollAuthResult:
     )
 
 
-def get_ytmusic_client(oauth_token_json: str):
-    """Create an authenticated YTMusic client from token JSON.
+def get_ytmusic_client_for_search():
+    """Create an unauthenticated YTMusic client for search operations.
+
+    YouTube Music's internal API doesn't accept OAuth tokens from TV-type clients,
+    so we use unauthenticated mode for search (which works fine).
+
+    Returns:
+        Unauthenticated YTMusic instance for search operations
+    """
+    from ytmusicapi import YTMusic
+    logger.info("Creating unauthenticated YTMusic client for search...")
+    return YTMusic()
+
+
+def get_access_token(oauth_token_json: str) -> str:
+    """Extract access token from OAuth token JSON.
 
     Args:
         oauth_token_json: JSON string containing OAuth token data
 
     Returns:
-        Authenticated YTMusic instance
-
-    Raises:
-        ValueError: If token JSON is invalid or credentials missing
-        ImportError: If ytmusicapi is not installed
+        Access token string
     """
-    from ytmusicapi import YTMusic, OAuthCredentials
-
-    client_id, client_secret = get_oauth_credentials()
-
-    credentials = OAuthCredentials(
-        client_id=client_id,
-        client_secret=client_secret
-    )
-
-    # YTMusic accepts the token as a JSON string directly
-    return YTMusic(oauth_token_json, oauth_credentials=credentials)
+    token_data = json.loads(oauth_token_json)
+    return token_data['access_token']
 
 
-def create_playlist(ytmusic, name: str, description: str = "") -> str:
-    """Create a new playlist on YouTube Music.
+def create_playlist_youtube_api(access_token: str, name: str, description: str = "") -> str:
+    """Create a new playlist using YouTube Data API.
+
+    YouTube Music's internal API doesn't accept OAuth tokens from TV-type clients,
+    so we use the YouTube Data API instead (which works with any OAuth token).
 
     Args:
-        ytmusic: Authenticated YTMusic client
+        access_token: OAuth access token
         name: Playlist name
         description: Optional playlist description
 
@@ -214,22 +221,51 @@ def create_playlist(ytmusic, name: str, description: str = "") -> str:
     Raises:
         Exception: If playlist creation fails
     """
-    # Use default description if none provided
+    import traceback
+
     if not description:
-        description = f"Imported from Spotify using Portify"
+        description = "Imported from Spotify using Portify"
 
-    playlist_id = ytmusic.create_playlist(title=name, description=description)
-    return playlist_id
+    logger.info(f"Creating playlist via YouTube Data API: {name}")
+
+    url = "https://www.googleapis.com/youtube/v3/playlists"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+    }
+    body = {
+        "snippet": {
+            "title": name,
+            "description": description
+        },
+        "status": {
+            "privacyStatus": "private"
+        }
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=body, params={"part": "snippet,status"})
+        response.raise_for_status()
+        data = response.json()
+        playlist_id = data.get('id')
+        logger.info(f"Created playlist: {playlist_id}")
+        return playlist_id
+    except requests.exceptions.HTTPError as e:
+        logger.error(f"Playlist creation failed: {e}")
+        logger.error(f"Response: {e.response.text if e.response else 'No response'}")
+        logger.error(traceback.format_exc())
+        raise
+    except Exception as e:
+        logger.error(f"Playlist creation failed: {type(e).__name__}: {e}")
+        logger.error(traceback.format_exc())
+        raise
 
 
-def add_tracks_to_playlist(ytmusic, playlist_id: str, video_ids: list[str]) -> int:
-    """Add tracks to a YouTube Music playlist.
-
-    Batches requests in groups of 25 to avoid API limits.
-    Uses duplicates=True to allow duplicate tracks as recommended in RESEARCH.md.
+def add_tracks_to_playlist_youtube_api(access_token: str, playlist_id: str, video_ids: List[str]) -> int:
+    """Add tracks to a YouTube playlist using YouTube Data API.
 
     Args:
-        ytmusic: Authenticated YTMusic client
+        access_token: OAuth access token
         playlist_id: Target playlist ID
         video_ids: List of YouTube video IDs to add
 
@@ -239,23 +275,53 @@ def add_tracks_to_playlist(ytmusic, playlist_id: str, video_ids: list[str]) -> i
     if not video_ids:
         return 0
 
-    added_count = 0
-    batch_size = 25
+    url = "https://www.googleapis.com/youtube/v3/playlistItems"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+    }
 
-    for i in range(0, len(video_ids), batch_size):
-        batch = video_ids[i:i + batch_size]
+    added_count = 0
+    for video_id in video_ids:
+        body = {
+            "snippet": {
+                "playlistId": playlist_id,
+                "resourceId": {
+                    "kind": "youtube#video",
+                    "videoId": video_id
+                }
+            }
+        }
+
         try:
-            result = ytmusic.add_playlist_items(
-                playlistId=playlist_id,
-                videoIds=batch,
-                duplicates=True
-            )
-            # add_playlist_items returns dict with status or list
-            # on success, count the batch as added
-            if result:
-                added_count += len(batch)
-        except Exception:
-            # Continue with remaining batches even if one fails
-            pass
+            response = requests.post(url, headers=headers, json=body, params={"part": "snippet"})
+            response.raise_for_status()
+            added_count += 1
+            logger.info(f"Added video {video_id} to playlist")
+        except requests.exceptions.HTTPError as e:
+            logger.warning(f"Failed to add video {video_id}: {e}")
+            # Continue with remaining videos
+        except Exception as e:
+            logger.warning(f"Failed to add video {video_id}: {type(e).__name__}: {e}")
+            # Continue with remaining videos
 
     return added_count
+
+
+# Keep old function names for backwards compatibility
+def create_playlist(ytmusic_or_token, name: str, description: str = "") -> str:
+    """Create playlist - wrapper for backwards compatibility."""
+    if isinstance(ytmusic_or_token, str):
+        # It's an access token
+        return create_playlist_youtube_api(ytmusic_or_token, name, description)
+    else:
+        # It's a YTMusic instance - shouldn't happen with new code
+        raise ValueError("YTMusic instance no longer supported - pass access_token instead")
+
+
+def add_tracks_to_playlist(ytmusic_or_token, playlist_id: str, video_ids: List[str]) -> int:
+    """Add tracks to playlist - wrapper for backwards compatibility."""
+    if isinstance(ytmusic_or_token, str):
+        return add_tracks_to_playlist_youtube_api(ytmusic_or_token, playlist_id, video_ids)
+    else:
+        raise ValueError("YTMusic instance no longer supported - pass access_token instead")

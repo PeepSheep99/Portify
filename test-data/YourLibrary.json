@@ -1,0 +1,61 @@
+{
+  "tracks": [
+    {
+      "artist": "Taylor Swift",
+      "album": "1989 (Taylor's Version)",
+      "track": "Shake It Off"
+    },
+    {
+      "artist": "Ed Sheeran",
+      "album": "÷ (Divide)",
+      "track": "Shape of You"
+    },
+    {
+      "artist": "Adele",
+      "album": "30",
+      "track": "Easy On Me"
+    },
+    {
+      "artist": "Bruno Mars",
+      "album": "24K Magic",
+      "track": "Uptown Funk"
+    },
+    {
+      "artist": "Billie Eilish",
+      "album": "When We All Fall Asleep, Where Do We Go?",
+      "track": "bad guy"
+    },
+    {
+      "artist": "Post Malone",
+      "album": "Hollywood's Bleeding",
+      "track": "Circles"
+    },
+    {
+      "artist": "Doja Cat",
+      "album": "Planet Her",
+      "track": "Kiss Me More"
+    },
+    {
+      "artist": "The Weeknd",
+      "album": "Starboy",
+      "track": "Starboy"
+    },
+    {
+      "artist": "Olivia Rodrigo",
+      "album": "SOUR",
+      "track": "drivers license"
+    },
+    {
+      "artist": "Drake",
+      "album": "Scorpion",
+      "track": "God's Plan"
+    }
+  ],
+  "albums": [],
+  "shows": [],
+  "episodes": [],
+  "bannedTracks": [],
+  "artists": [],
+  "bannedArtists": [],
+  "other": []
+}
