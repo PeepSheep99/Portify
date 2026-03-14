@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { flushSync } from 'react-dom';
 
 const STORAGE_KEY = 'portify_oauth_token';
@@ -42,6 +42,30 @@ export default function Home() {
   const [showDropzone, setShowDropzone] = useState(true);
   const [excludedPlaylists, setExcludedPlaylists] = useState<Set<string>>(new Set());
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
+
+  // Validate token on mount - if invalid, clear it so UI shows "Connect"
+  useEffect(() => {
+    if (!oauthToken) return;
+
+    let cancelled = false;
+    validateToken(oauthToken).then((isValid) => {
+      if (cancelled) return;
+      if (!isValid) {
+        // Token is invalid/expired - clear it
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch {
+          // localStorage might be unavailable
+        }
+        setOauthToken(null);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally only validate on mount
+  }, []);
 
   const handlePlaylistsParsed = (newPlaylists: ParsedPlaylist[]) => {
     setPlaylists((prev) => [...prev, ...newPlaylists]);
