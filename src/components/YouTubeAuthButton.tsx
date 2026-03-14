@@ -2,23 +2,34 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ExternalLink, Copy } from 'lucide-react';
+import { ExternalLink, Check, RefreshCw } from 'lucide-react';
 import { startAuth, pollAuth } from '@/lib/youtubeMusic';
 import type { AuthStatus, DeviceAuthResponse } from '@/types/youtube';
-import { Toast } from './Toast';
+
+const STORAGE_KEY = 'portify_oauth_token';
 
 interface YouTubeAuthButtonProps {
   onAuthenticated: (token: string) => void;
+  isAuthenticated?: boolean;
 }
 
-export function YouTubeAuthButton({ onAuthenticated }: YouTubeAuthButtonProps) {
-  const [authStatus, setAuthStatus] = useState<AuthStatus>('disconnected');
+export function YouTubeAuthButton({ onAuthenticated, isAuthenticated = false }: YouTubeAuthButtonProps) {
+  const [authStatus, setAuthStatus] = useState<AuthStatus>(isAuthenticated ? 'connected' : 'disconnected');
   const [deviceInfo, setDeviceInfo] = useState<DeviceAuthResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
-  const [showCopied, setShowCopied] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [googleOpened, setGoogleOpened] = useState(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const expirationRef = useRef<number>(0);
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Derive the effective status: prop takes precedence when authenticated
+  // This avoids syncing state from props (anti-pattern) and ensures
+  // the UI always reflects the actual auth state from the parent
+  const effectiveStatus = isAuthenticated ? 'connected' : authStatus;
+
+  // Clear error when authenticated (derived, no useEffect needed)
+  const displayError = isAuthenticated ? null : error;
 
   // Clean up polling and countdown on unmount
   useEffect(() => {
@@ -26,8 +37,8 @@ export function YouTubeAuthButton({ onAuthenticated }: YouTubeAuthButtonProps) {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
       }
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
+      if (countdownRef.current) {
+        clearTimeout(countdownRef.current);
       }
     };
   }, []);
@@ -37,46 +48,65 @@ export function YouTubeAuthButton({ onAuthenticated }: YouTubeAuthButtonProps) {
       clearInterval(pollIntervalRef.current);
       pollIntervalRef.current = null;
     }
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current);
-      countdownIntervalRef.current = null;
-    }
-    setTimeRemaining(null);
   }, []);
+
+  const stopCountdown = useCallback(() => {
+    if (countdownRef.current) {
+      clearTimeout(countdownRef.current);
+      countdownRef.current = null;
+    }
+    setCountdown(null);
+  }, []);
+
+  const copyToClipboard = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const handleConnect = async () => {
     setError(null);
     setAuthStatus('pending');
+    setGoogleOpened(false);
 
     try {
       const response = await startAuth();
       setDeviceInfo(response);
+      expirationRef.current = Date.now() + response.expires_in * 1000;
 
-      // Auto-open verification URL in new tab
-      window.open(response.verification_url, '_blank', 'noopener,noreferrer');
+      // AUTO-COPY the code first
+      await copyToClipboard(response.user_code);
 
-      // Set expiration time
-      const expiration = Date.now() + response.expires_in * 1000;
-      setTimeRemaining(response.expires_in);
+      // Start 5-second countdown before opening Google tab
+      setCountdown(5);
 
-      // Start countdown timer (updates every second)
-      countdownIntervalRef.current = setInterval(() => {
-        const remaining = Math.max(0, Math.floor((expiration - Date.now()) / 1000));
-        setTimeRemaining(remaining);
-
-        if (remaining <= 0) {
-          stopPolling();
-          setAuthStatus('disconnected');
-          setDeviceInfo(null);
-          setError('Code expired. Please try again.');
+      const runCountdown = (count: number) => {
+        if (count > 0) {
+          countdownRef.current = setTimeout(() => {
+            setCountdown(count - 1);
+            runCountdown(count - 1);
+          }, 1000);
+        } else {
+          // Open Google tab when countdown reaches 0
+          window.open(response.verification_url, '_blank', 'noopener,noreferrer');
+          setGoogleOpened(true);
+          setCountdown(null);
         }
-      }, 1000);
+      };
+      runCountdown(5);
 
       // Start polling at the interval specified by Google
       const pollInterval = (response.interval || 5) * 1000;
       pollIntervalRef.current = setInterval(async () => {
         // Stop polling if expired
-        if (Date.now() >= expiration) {
+        if (Date.now() >= expirationRef.current) {
+          stopPolling();
+          setAuthStatus('disconnected');
+          setDeviceInfo(null);
+          setError('Session expired. Please try again.');
           return;
         }
 
@@ -86,6 +116,12 @@ export function YouTubeAuthButton({ onAuthenticated }: YouTubeAuthButtonProps) {
           if (pollResult.status === 'complete' && pollResult.token) {
             stopPolling();
             setAuthStatus('connected');
+            // Persist token to localStorage
+            try {
+              localStorage.setItem(STORAGE_KEY, pollResult.token);
+            } catch {
+              // localStorage might be unavailable (private browsing, etc.)
+            }
             onAuthenticated(pollResult.token);
           } else if (pollResult.status === 'error') {
             stopPolling();
@@ -98,181 +134,174 @@ export function YouTubeAuthButton({ onAuthenticated }: YouTubeAuthButtonProps) {
           stopPolling();
           setAuthStatus('disconnected');
           setDeviceInfo(null);
-          setError(err instanceof Error ? err.message : 'Polling failed');
+          setError(err instanceof Error ? err.message : 'Connection failed');
         }
       }, pollInterval);
     } catch (err) {
       setAuthStatus('disconnected');
-      setError(err instanceof Error ? err.message : 'Failed to start authentication');
+      setError(err instanceof Error ? err.message : 'Failed to start');
     }
   };
 
-  const handleCopyCode = () => {
-    if (deviceInfo?.user_code) {
-      navigator.clipboard.writeText(deviceInfo.user_code);
-      setShowCopied(true);
-      setTimeout(() => setShowCopied(false), 2000);
+  const handleOpenGoogle = () => {
+    if (deviceInfo?.verification_url) {
+      window.open(deviceInfo.verification_url, '_blank', 'noopener,noreferrer');
+      setGoogleOpened(true);
     }
   };
 
-  // Calculate progress for circular timer
-  const progress = timeRemaining !== null && deviceInfo
-    ? (timeRemaining / deviceInfo.expires_in) * 100
-    : 100;
-
-  // Get urgency color based on time remaining
-  const getUrgencyColor = () => {
-    if (progress > 50) return '#22c55e'; // green
-    if (progress > 20) return '#f59e0b'; // amber
-    return '#ef4444'; // red
+  const handleCancel = () => {
+    stopCountdown();
+    stopPolling();
+    setAuthStatus('disconnected');
+    setDeviceInfo(null);
+    setGoogleOpened(false);
   };
 
   return (
     <AnimatePresence mode="wait">
       {/* Disconnected state: show connect button */}
-      {authStatus === 'disconnected' && (
+      {effectiveStatus === 'disconnected' && (
         <motion.div
           key="disconnected"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="space-y-3"
+          className="space-y-2"
         >
           <motion.button
             onClick={handleConnect}
-            className="relative w-full overflow-hidden rounded-2xl glass-strong p-4 font-medium text-white transition-all"
-            whileHover={{ scale: 1.02 }}
+            className="relative w-full overflow-hidden rounded-2xl p-4 font-semibold text-white transition-all duration-300 group"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255, 0, 0, 0.15) 0%, rgba(26, 26, 36, 0.9) 100%)',
+              border: '1px solid rgba(255, 0, 0, 0.2)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
+            }}
+            whileHover={{ scale: 1.02, boxShadow: '0 0 30px rgba(255, 0, 0, 0.2)' }}
             whileTap={{ scale: 0.98 }}
           >
-            {/* Pulsing ring */}
-            <div className="absolute inset-0 rounded-2xl border-2 border-red-500/50 animate-pulse-ring" />
-
-            {/* Gradient background on hover */}
-            <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 to-red-500/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
-
-            <div className="relative flex items-center justify-center gap-3">
+            <div className="flex items-center justify-center gap-3">
               {/* YouTube icon */}
-              <svg className="w-6 h-6 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-              </svg>
-              <span className="text-lg">Connect YouTube Music</span>
+              <div className="w-10 h-10 rounded-xl bg-[var(--youtube-red)] flex items-center justify-center shadow-lg group-hover:shadow-[var(--youtube-red)]/30 transition-shadow">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+              </div>
+              <span className="text-base">Connect YouTube Music</span>
             </div>
           </motion.button>
 
-          {error && (
+          {displayError && (
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="text-center text-sm text-red-400"
             >
-              {error}
+              {displayError}
             </motion.p>
           )}
         </motion.div>
       )}
 
-      {/* Pending state: show device code and instructions */}
-      {authStatus === 'pending' && deviceInfo && (
+      {/* Pending state: show instructions */}
+      {effectiveStatus === 'pending' && deviceInfo && (
         <motion.div
           key="pending"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="glass-strong rounded-2xl p-6"
+          className="glass-strong rounded-2xl p-5"
         >
-          <div className="space-y-5 text-center">
-            {/* Circular progress timer */}
-            <div className="relative mx-auto w-20 h-20">
-              <svg className="w-full h-full transform -rotate-90">
-                {/* Background circle */}
-                <circle
-                  cx="40"
-                  cy="40"
-                  r="36"
-                  stroke="rgba(255,255,255,0.1)"
-                  strokeWidth="4"
-                  fill="none"
-                />
-                {/* Progress circle */}
-                <circle
-                  cx="40"
-                  cy="40"
-                  r="36"
-                  stroke={getUrgencyColor()}
-                  strokeWidth="4"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray={226}
-                  strokeDashoffset={226 - (226 * progress) / 100}
-                  className="transition-all duration-1000 ease-linear"
-                />
-              </svg>
-              {/* Time remaining text */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-sm font-mono text-white/80">
-                  {timeRemaining !== null
-                    ? `${Math.floor(timeRemaining / 60)}:${String(timeRemaining % 60).padStart(2, '0')}`
-                    : '--:--'}
+          <div className="space-y-4">
+            {/* Status message - different for countdown vs waiting */}
+            <div className="text-center">
+              {countdown !== null ? (
+                <>
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Check className="w-5 h-5 text-[var(--spotify-green)]" />
+                    <span className="text-[var(--spotify-green)] font-medium">Code copied to clipboard</span>
+                  </div>
+                  <p className="text-[var(--text-primary)] font-medium">
+                    Opening Google sign-in in <span className="text-[var(--accent)] font-bold">{countdown}</span> seconds...
+                  </p>
+                  <p className="text-sm text-[var(--text-muted)] mt-1">
+                    Just paste the code when the page opens
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-base font-medium text-[var(--text-primary)]">
+                    Paste this code in the Google sign-in page
+                  </p>
+                  <p className="text-sm text-[var(--text-muted)] mt-1">
+                    {googleOpened ? 'We opened a sign-in tab for you' : 'Opening sign-in page...'}
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Code display - always show checkmark during pending state */}
+            <div className="flex items-center justify-center gap-2">
+              <div className="glass rounded-xl px-5 py-3 flex items-center gap-3">
+                <span className="font-mono text-2xl font-bold tracking-wider text-white">
+                  {deviceInfo.user_code}
                 </span>
+                <div className="w-6 h-6 rounded-full bg-[var(--spotify-green)]/20 flex items-center justify-center">
+                  <Check className="w-4 h-4 text-[var(--spotify-green)]" />
+                </div>
               </div>
             </div>
 
-            <p className="text-sm text-white/70">
-              Enter this code at Google:
-            </p>
-
-            {/* Device code with glass styling */}
-            <motion.button
-              onClick={handleCopyCode}
-              className="group mx-auto flex items-center gap-2 glass rounded-xl px-5 py-3"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <span className="font-mono text-3xl font-bold tracking-widest text-white">
-                {deviceInfo.user_code}
-              </span>
-              <Copy className="w-5 h-5 text-white/50 group-hover:text-white/80 transition-colors" />
-            </motion.button>
-
-            <a
-              href={deviceInfo.verification_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              <span>{deviceInfo.verification_url}</span>
-              <ExternalLink className="w-4 h-4" />
-            </a>
-
-            {/* Loading dots */}
-            <div className="flex items-center justify-center gap-1.5 pt-2">
-              {[0, 1, 2].map((i) => (
+            {/* Waiting indicator - only show after Google opened */}
+            {!countdown && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-center gap-2 text-[var(--text-muted)]"
+              >
                 <motion.div
-                  key={i}
-                  className="w-2 h-2 rounded-full bg-white/40"
-                  animate={{ opacity: [0.3, 1, 0.3] }}
-                  transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                    delay: i * 0.2,
-                  }}
-                />
-              ))}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </motion.div>
+                <span className="text-sm">Waiting for you to complete sign-in...</span>
+              </motion.div>
+            )}
+
+            {/* Action buttons */}
+            <div className="flex items-center justify-center gap-3 pt-2">
+              {/* Only show "Open sign-in page" after countdown finishes OR if user wants to reopen */}
+              {!countdown && (
+                <>
+                  <button
+                    onClick={handleOpenGoogle}
+                    className="text-sm text-[var(--accent)] hover:text-[var(--accent-light)] transition-colors inline-flex items-center gap-1.5 font-medium"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Reopen sign-in page
+                  </button>
+                  <span className="text-[var(--text-muted)]">·</span>
+                </>
+              )}
+              <button
+                onClick={handleCancel}
+                className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </motion.div>
       )}
 
-      {/* Toast notification for copy feedback */}
-      <Toast message="Copied!" isVisible={showCopied} />
-
-      {/* Connected state: show success */}
-      {authStatus === 'connected' && (
+      {/* Connected state: show success with green glow */}
+      {effectiveStatus === 'connected' && (
         <motion.div
           key="connected"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="glass rounded-2xl p-4 glow-success"
+          className="glass rounded-2xl p-4 glow-connected border-[var(--spotify-green)]/30"
         >
           <div className="flex items-center justify-center gap-3">
             {/* Animated checkmark */}
@@ -280,28 +309,18 @@ export function YouTubeAuthButton({ onAuthenticated }: YouTubeAuthButtonProps) {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center"
+              className="w-10 h-10 rounded-full bg-[var(--spotify-green)]/20 flex items-center justify-center"
             >
-              <motion.svg
-                className="w-5 h-5 text-green-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                <motion.path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={3}
-                  d="M5 13l4 4L19 7"
-                />
-              </motion.svg>
+              <Check className="w-6 h-6 text-[var(--spotify-green)]" />
             </motion.div>
-            <span className="font-medium text-green-400">
-              YouTube Music Connected
-            </span>
+            <div>
+              <span className="font-semibold text-[var(--spotify-green)] block">
+                YouTube Music Connected
+              </span>
+              <span className="text-xs text-[var(--text-muted)]">
+                Ready to transfer your playlists
+              </span>
+            </div>
           </div>
         </motion.div>
       )}
