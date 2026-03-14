@@ -118,10 +118,16 @@ Plans:
 **Goal:** Enable reverse transfer from YouTube Music to Spotify (bidirectional capability)
 **Depends on:** Phase 5
 **Requirements**: REV-01, REV-02, REV-03, REV-04, REV-05, REV-06
-**Plans:** 0 plans
+**Plans:** 7 plans
 
 Plans:
-- [ ] (to be planned)
+- [ ] 06-00-PLAN.md — Wave 0: Test infrastructure + Spotify mock fixtures (Nyquist compliance)
+- [ ] 06-01-PLAN.md — Spotify OAuth PKCE backend + frontend utilities (REV-02)
+- [ ] 06-02-PLAN.md — SpotifyAuthButton component + OAuth callback page (REV-02)
+- [ ] 06-03-PLAN.md — YouTube Music playlist reading API + frontend (REV-01)
+- [ ] 06-04-PLAN.md — Spotify track matching + playlist creation API (REV-03, REV-04)
+- [ ] 06-05-PLAN.md — Reverse transfer SSE endpoint + frontend client (REV-04, REV-05, REV-06)
+- [ ] 06-06-PLAN.md — Bidirectional UI with mode selector + integration (REV-01, REV-06)
 
 **Success Criteria**:
   1. User can read playlists from YouTube Music via authenticated API
@@ -140,9 +146,9 @@ Plans:
 | 3. UI Polish & UX Refinements | 3/3 | Complete |
 | 4. UX Overhaul & Visual Refresh | 6/6 | Complete |
 | 5. Code Cleanup & Deployment | 3/3 | Complete |
-| 6. YouTube Music → Spotify Transfer | 0/? | Planning |
+| 6. YouTube Music → Spotify Transfer | 0/7 | Planning |
 
 ---
 *Roadmap created: 2026-03-13*
 *Scope: MVP (Spotify -> YouTube Music only)*
-*Requirements: 21 total (UX-04 through UX-11 added in Phase 4)*
+*Requirements: 27 total (REV-01 through REV-06 added in Phase 6)*
