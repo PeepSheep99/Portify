@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] p-8">
@@ -60,9 +62,9 @@ export default function PrivacyPolicy() {
         </section>
 
         <div className="mt-8 pt-6 border-t border-[var(--border)]">
-          <a href="/" className="text-[var(--spotify-green)] hover:underline">
+          <Link href="/" className="text-[var(--spotify-green)] hover:underline">
             ← Back to Portify
-          </a>
+          </Link>
         </div>
       </div>
     </div>
