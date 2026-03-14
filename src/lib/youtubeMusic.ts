@@ -57,26 +57,34 @@ export async function transferPlaylist(
   playlist: ParsedPlaylist,
   onProgress: (data: TransferProgress) => void
 ): Promise<TransferResult> {
+  const requestBody = {
+    oauth_token: token,
+    playlist: {
+      name: playlist.name,
+      tracks: playlist.tracks.map((t) => ({
+        name: t.name,
+        artist: t.artist,
+        album: t.album,
+      })),
+    },
+  };
+
   const response = await fetch('/api/transfer', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      oauth_token: token,
-      playlist: {
-        name: playlist.name,
-        tracks: playlist.tracks.map((t) => ({
-          name: t.name,
-          artist: t.artist,
-          album: t.album,
-        })),
-      },
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    const errorText = await response.text();
+    let error;
+    try {
+      error = JSON.parse(errorText);
+    } catch {
+      error = { detail: errorText || 'Unknown error' };
+    }
     throw new Error(error.detail || 'Failed to start transfer');
   }
 

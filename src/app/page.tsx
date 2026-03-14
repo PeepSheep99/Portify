@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { Plus, ArrowRight, Trash2 } from 'lucide-react';
 import { FileDropzone } from '@/components/FileDropzone';
 import { PlaylistList } from '@/components/PlaylistList';
 import { YouTubeAuthButton } from '@/components/YouTubeAuthButton';
@@ -124,9 +124,7 @@ export default function Home() {
               </svg>
             </div>
             {/* Arrow */}
-            <svg className="w-6 h-6 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
+            <ArrowRight className="w-6 h-6 text-[var(--text-muted)]" />
             {/* YouTube Music icon */}
             <div className="w-14 h-14 rounded-xl bg-[#ff0000] flex items-center justify-center shadow-lg shadow-[#ff0000]/30">
               <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
@@ -134,10 +132,10 @@ export default function Home() {
               </svg>
             </div>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-white mb-2">
+          <h1 className="text-4xl font-bold tracking-tight text-[var(--text-primary)] mb-2">
             Portify
           </h1>
-          <p className="text-base text-white/50">
+          <p className="text-base text-[var(--text-secondary)]">
             Transfer your Spotify playlists to YouTube Music
           </p>
         </motion.header>
@@ -178,7 +176,7 @@ export default function Home() {
               >
                 <button
                   onClick={() => setShowDropzone(true)}
-                  className="text-sm text-white/50 hover:text-white/80 transition-colors flex items-center gap-2 glass px-4 py-2 rounded-xl"
+                  className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-2 glass px-4 py-2 rounded-xl"
                 >
                   <Plus className="w-4 h-4" />
                   Add more files
@@ -198,11 +196,9 @@ export default function Home() {
               >
                 <button
                   onClick={handleClear}
-                  className="text-sm text-white/40 hover:text-white/70 transition-colors flex items-center gap-2"
+                  className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors flex items-center gap-2"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+                  <Trash2 className="w-4 h-4" />
                   Clear all
                 </button>
               </motion.div>
@@ -234,8 +230,8 @@ export default function Home() {
           transition={{ delay: 0.5 }}
           className="mt-16 text-center"
         >
-          <p className="text-sm text-white/40">
-            Made with <span className="text-red-400">♥</span> by <span className="text-white/60 font-medium">Navneet</span>
+          <p className="text-sm text-[var(--text-muted)]">
+            Made with <span className="text-red-400">&#9829;</span> by <span className="text-[var(--text-secondary)] font-medium">Navneet</span>
           </p>
         </motion.footer>
       </div>
