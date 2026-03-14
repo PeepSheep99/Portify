@@ -198,4 +198,11 @@ describe('TransferProgress', () => {
       expect(progressBar).toHaveAttribute('aria-valuemax', '100');
     });
   });
+
+  describe('unified progress calculation', () => {
+    it.todo('calculates matching phase as 0-40%');
+    it.todo('calculates creating phase as 40-60%');
+    it.todo('calculates adding phase as 60-100%');
+    it.todo('displays phase label below percentage');
+  });
 });
