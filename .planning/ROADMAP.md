@@ -9,7 +9,7 @@ Minimal viable product: Spotify GDPR JSON export -> YouTube Music playlists. Two
 - [x] **Phase 1: Foundation + Spotify Parser** — Vercel setup, JSON parsing, file upload UI
 - [x] **Phase 2: YouTube Music + Transfer** — OAuth, matching, playlist creation, progress UI (completed 2026-03-13)
 - [x] **Phase 3: UI Polish & UX Refinements** — Icons, progress bar, dropzone visibility, playlist selection (completed 2026-03-14)
-- [ ] **Phase 4: UX Overhaul & Visual Refresh** — Interaction fixes, visual redesign, mobile optimization (gap closure in progress)
+- [x] **Phase 4: UX Overhaul & Visual Refresh** — Interaction fixes, visual redesign, mobile optimization (completed 2026-03-14)
 
 ## Phase Details
 
@@ -73,14 +73,14 @@ Plans:
 **Goal:** Transform to clean light theme, simplify transfer interaction, improve OAuth UX, optimize mobile
 **Depends on:** Phase 3
 **Requirements**: UX-04, UX-05, UX-06, UX-07, UX-08, UX-09, UX-10, UX-11
-**Plans:** 5/6 plans complete (1 remaining)
+**Plans:** 6/6 plans complete
 
 Plans:
 - [x] 04-00-PLAN.md — Wave 0: Test scaffolds for TDD implementation (Nyquist compliance)
 - [x] 04-01-PLAN.md — Light theme CSS + bug fixes (hydration, debug logs, dead code cleanup)
 - [x] 04-02-PLAN.md — OAuth UX improvements (copy toast feedback, auto-open verification URL)
 - [x] 04-03-PLAN.md — Batch transfer flow + unified progress + mobile optimization
-- [ ] 04-04-PLAN.md — Gap closure: Graduate test scaffolds + fix TransferProgress tests
+- [x] 04-04-PLAN.md — Gap closure: Graduate test scaffolds + fix TransferProgress tests
 - [x] 04-05-PLAN.md — Gap closure: Update REQUIREMENTS.md with UX-04 through UX-11
 
 **Success Criteria**:
@@ -101,7 +101,7 @@ Plans:
 | 1. Foundation + Spotify Parser | 3/3 | Complete |
 | 2. YouTube Music + Transfer | 4/4 | Complete |
 | 3. UI Polish & UX Refinements | 3/3 | Complete |
-| 4. UX Overhaul & Visual Refresh | 5/6 | Gap Closure |
+| 4. UX Overhaul & Visual Refresh | 6/6 | Complete |
 
 ---
 *Roadmap created: 2026-03-13*
