@@ -73,11 +73,12 @@ Plans:
 **Goal:** Transform to clean light theme, simplify transfer interaction, improve OAuth UX, optimize mobile
 **Depends on:** Phase 3
 **Requirements**: UX-04, UX-05, UX-06, UX-07, UX-08, UX-09, UX-10, UX-11
-**Plans:** 3 plans
+**Plans:** 3/4 plans executed
 
 Plans:
-- [ ] 04-01-PLAN.md — Light theme CSS + bug fixes (hydration, debug logs, dead code cleanup)
-- [ ] 04-02-PLAN.md — OAuth UX improvements (copy toast feedback, auto-open verification URL)
+- [x] 04-00-PLAN.md — Wave 0: Test scaffolds for TDD implementation (Nyquist compliance)
+- [x] 04-01-PLAN.md — Light theme CSS + bug fixes (hydration, debug logs, dead code cleanup)
+- [x] 04-02-PLAN.md — OAuth UX improvements (copy toast feedback, auto-open verification URL)
 - [ ] 04-03-PLAN.md — Batch transfer flow + unified progress + mobile optimization
 
 **Success Criteria**:
@@ -96,7 +97,7 @@ Plans:
 | 1. Foundation + Spotify Parser | 3/3 | Complete |
 | 2. YouTube Music + Transfer | 4/4 | Complete |
 | 3. UI Polish & UX Refinements | 3/3 | Complete |
-| 4. UX Overhaul & Visual Refresh | 0/3 | Planned |
+| 4. UX Overhaul & Visual Refresh | 3/4 | In Progress |
 
 ---
 *Roadmap created: 2026-03-13*
