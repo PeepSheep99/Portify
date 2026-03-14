@@ -7,7 +7,6 @@ import {
 import type {
   SpotifyLibrary,
   SpotifyPlaylistExport,
-  ParsedPlaylist,
 } from '@/types/spotify';
 
 // Test fixtures

@@ -1,6 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-// YouTubeAuthButton import will be added when tests are implemented
+import { describe, it } from 'vitest';
+// Testing library and component imports will be added when tests are implemented
 
 describe('YouTubeAuthButton', () => {
   describe('authentication flow', () => {
