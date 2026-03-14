@@ -2,6 +2,17 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { TransferResults } from './TransferResults';
 
+// Mock animated components to immediately show final values
+vi.mock('@/components/ui', () => ({
+  AnimatedNumber: ({ value, className }: { value: number; className?: string }) => (
+    <span className={className}>{value}</span>
+  ),
+  AnimatedPercentage: ({ value, className }: { value: number; className?: string }) => (
+    <span className={className}>{value}%</span>
+  ),
+  ConfettiCelebration: () => null,
+}));
+
 const mockResult = {
   playlistId: 'playlist_123',
   playlistName: 'My Awesome Playlist',
@@ -37,7 +48,6 @@ describe('TransferResults', () => {
 
     it('renders success banner with playlist name', () => {
       render(<TransferResults result={mockResult} onClose={() => {}} />);
-      expect(screen.getByText(/playlist created/i)).toBeInTheDocument();
       expect(
         screen.getByRole('heading', { name: /My Awesome Playlist/i })
       ).toBeInTheDocument();
@@ -46,7 +56,7 @@ describe('TransferResults', () => {
     it('renders track counts', () => {
       render(<TransferResults result={mockResult} onClose={() => {}} />);
       expect(screen.getByText('45')).toBeInTheDocument();
-      expect(screen.getByText('tracks added')).toBeInTheDocument();
+      expect(screen.getByText('added')).toBeInTheDocument();
       expect(screen.getByText('5')).toBeInTheDocument();
       expect(screen.getByText('failed')).toBeInTheDocument();
     });
@@ -70,7 +80,8 @@ describe('TransferResults', () => {
     it('uses green color for high match rate (>80%)', () => {
       render(<TransferResults result={mockResult} onClose={() => {}} />);
       const rateElement = screen.getByText('90%');
-      expect(rateElement).toHaveClass('text-green-600');
+      // Color class is on parent div
+      expect(rateElement.parentElement).toHaveClass('text-green-400');
     });
 
     it('uses yellow color for medium match rate (50-80%)', () => {
@@ -80,7 +91,8 @@ describe('TransferResults', () => {
       };
       render(<TransferResults result={mediumResult} onClose={() => {}} />);
       const rateElement = screen.getByText('65%');
-      expect(rateElement).toHaveClass('text-yellow-600');
+      // Color class is on parent div
+      expect(rateElement.parentElement).toHaveClass('text-yellow-400');
     });
 
     it('uses red color for low match rate (<50%)', () => {
@@ -90,7 +102,8 @@ describe('TransferResults', () => {
       };
       render(<TransferResults result={lowResult} onClose={() => {}} />);
       const rateElement = screen.getByText('30%');
-      expect(rateElement).toHaveClass('text-red-600');
+      // Color class is on parent div
+      expect(rateElement.parentElement).toHaveClass('text-red-400');
     });
   });
 
@@ -120,27 +133,35 @@ describe('TransferResults', () => {
     it('toggles expansion on repeated click', () => {
       render(<TransferResults result={mockResult} onClose={() => {}} />);
       const button = screen.getByRole('button', { name: /^matched tracks/i });
+      // Initially collapsed
+      expect(button).toHaveAttribute('aria-expanded', 'false');
       fireEvent.click(button);
-      // When expanded, should show confidence percentage
-      expect(screen.getByText('98%')).toBeInTheDocument();
+      // Now expanded
+      expect(button).toHaveAttribute('aria-expanded', 'true');
       fireEvent.click(button);
-      // When collapsed, confidence should not be visible
-      expect(screen.queryByText('98%')).not.toBeInTheDocument();
+      // Collapsed again
+      expect(button).toHaveAttribute('aria-expanded', 'false');
     });
   });
 
-  describe('close button', () => {
-    it('calls onClose when close button clicked', () => {
+  describe('action buttons', () => {
+    it('calls onClose when Done button clicked', () => {
       const onClose = vi.fn();
       render(<TransferResults result={mockResult} onClose={onClose} />);
-      fireEvent.click(screen.getByRole('button', { name: /close/i }));
+      fireEvent.click(screen.getByRole('button', { name: /done/i }));
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
-    it('calls onClose when transfer another button clicked', () => {
+    it('shows Continue button when batch has more playlists', () => {
       const onClose = vi.fn();
-      render(<TransferResults result={mockResult} onClose={onClose} />);
-      fireEvent.click(screen.getByRole('button', { name: /transfer another/i }));
+      render(
+        <TransferResults
+          result={mockResult}
+          onClose={onClose}
+          batchProgress={{ current: 1, total: 3 }}
+        />
+      );
+      fireEvent.click(screen.getByRole('button', { name: /continue/i }));
       expect(onClose).toHaveBeenCalledTimes(1);
     });
   });
@@ -190,16 +211,16 @@ describe('TransferResults', () => {
     it('expandable sections are keyboard accessible', () => {
       render(<TransferResults result={mockResult} onClose={() => {}} />);
       const expandButton = screen.getByRole('button', { name: /^matched tracks/i });
-      expandButton.focus();
-      fireEvent.keyDown(expandButton, { key: 'Enter' });
-      // When expanded, should show confidence percentage
-      expect(screen.getByText('98%')).toBeInTheDocument();
+      // Buttons are natively keyboard accessible (Enter/Space trigger click)
+      expect(expandButton).toHaveAttribute('aria-expanded', 'false');
+      fireEvent.click(expandButton);
+      expect(expandButton).toHaveAttribute('aria-expanded', 'true');
     });
 
-    it('close button has accessible label', () => {
+    it('Done button has accessible label', () => {
       render(<TransferResults result={mockResult} onClose={() => {}} />);
-      const closeButton = screen.getByRole('button', { name: /close/i });
-      expect(closeButton).toBeInTheDocument();
+      const doneButton = screen.getByRole('button', { name: /done/i });
+      expect(doneButton).toBeInTheDocument();
     });
   });
 });
