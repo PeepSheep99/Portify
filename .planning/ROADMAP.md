@@ -69,6 +69,26 @@ Plans:
   4. User can select/deselect playlists with checkboxes
   5. SSE progress events arrive in real-time (not batched)
 
+### Phase 4: UX Overhaul & Visual Refresh
+**Goal:** Transform to clean light theme, simplify transfer interaction, improve OAuth UX, optimize mobile
+**Depends on:** Phase 3
+**Requirements**: UX-04, UX-05, UX-06, UX-07, UX-08, UX-09, UX-10, UX-11
+**Plans:** 3 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Light theme CSS + bug fixes (hydration, debug logs, dead code cleanup)
+- [ ] 04-02-PLAN.md — OAuth UX improvements (copy toast feedback, auto-open verification URL)
+- [ ] 04-03-PLAN.md — Batch transfer flow + unified progress + mobile optimization
+
+**Success Criteria**:
+  1. App displays with light theme (white background, Spotify green accent)
+  2. No hydration errors or DEBUG logs in console
+  3. Clicking copy shows "Copied!" toast
+  4. All playlists selected by default (opt-out with x icon)
+  5. Single "Transfer X playlists" button in fixed bottom bar
+  6. Progress shows unified 0-100% with phase labels
+  7. Mobile responsive layout with proper spacing
+
 ## Progress
 
 | Phase | Plans | Status |
@@ -76,29 +96,9 @@ Plans:
 | 1. Foundation + Spotify Parser | 3/3 | Complete |
 | 2. YouTube Music + Transfer | 4/4 | Complete |
 | 3. UI Polish & UX Refinements | 3/3 | Complete |
-| 4. UX Overhaul & Visual Refresh | 0/? | Not Started |
-
-### Phase 4: UX Overhaul & Visual Refresh
-
-**Goal:** Improve user experience, fix bugs, create inviting visual design, optimize mobile
-**Depends on:** Phase 3
-**Requirements**: UX-04 through UX-13 (see below)
-**Plans:** 0 plans
-
-**User Requirements:**
-1. **Remove checkbox/transfer friction** — Current pattern confusing (checkbox + per-playlist Transfer button). Simplify to batch transfer flow with "Transfer Selected" or remove checkboxes entirely
-2. **Fix OAuth UX** — Timer shows 30 min (too long), "Enter code at Google" unclear, copy button needs "Copied!" feedback, link to google.com/device needs prominence
-3. **Unified progress bar** — Currently resets 0→100 twice (matching, then creating). Show single continuous progress OR clear phase indicators (Step 1/3, 2/3, 3/3)
-4. **Visual refresh** — Dark/gloomy vibes → inviting, happy, clean look. Define cohesive color palette. Remove random colors.
-5. **Fix hydration error** — AnimatedBackground.tsx uses Math.random() causing SSR mismatch. Generate particles client-side only
-6. **Remove debug console logs** — Stop polluting console with [DEBUG transferPlaylist] logs
-7. **Mobile optimization** — Elements too large, uninviting. Create best possible mobile experience with proper responsive design
-8. **Dead code cleanup** — Remove unused MusicVisualizer export, replace remaining inline SVG icons with Lucide
-
-Plans:
-- [ ] TBD (run /gsd:plan-phase 4 to break down)
+| 4. UX Overhaul & Visual Refresh | 0/3 | Planned |
 
 ---
 *Roadmap created: 2026-03-13*
 *Scope: MVP (Spotify -> YouTube Music only)*
-*Requirements: 13 total*
+*Requirements: 13 total (UX-04 through UX-11 added in Phase 4)*
