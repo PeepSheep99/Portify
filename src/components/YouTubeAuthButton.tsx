@@ -19,6 +19,7 @@ export function YouTubeAuthButton({ onAuthenticated, isAuthenticated = false }: 
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [googleOpened, setGoogleOpened] = useState(false);
+  const [popupBlocked, setPopupBlocked] = useState(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const expirationRef = useRef<number>(0);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
@@ -90,9 +91,14 @@ export function YouTubeAuthButton({ onAuthenticated, isAuthenticated = false }: 
             runCountdown(count - 1);
           }, 1000);
         } else {
-          // Open Google tab when countdown reaches 0
-          window.open(response.verification_url, '_blank', 'noopener,noreferrer');
-          setGoogleOpened(true);
+          // Try to open Google tab when countdown reaches 0
+          const popup = window.open(response.verification_url, '_blank', 'noopener,noreferrer');
+          // Detect if popup was blocked (common on mobile browsers)
+          if (!popup || popup.closed) {
+            setPopupBlocked(true);
+          } else {
+            setGoogleOpened(true);
+          }
           setCountdown(null);
         }
       };
@@ -145,8 +151,10 @@ export function YouTubeAuthButton({ onAuthenticated, isAuthenticated = false }: 
 
   const handleOpenGoogle = () => {
     if (deviceInfo?.verification_url) {
+      // User-initiated click won't be blocked
       window.open(deviceInfo.verification_url, '_blank', 'noopener,noreferrer');
       setGoogleOpened(true);
+      setPopupBlocked(false);
     }
   };
 
@@ -156,6 +164,7 @@ export function YouTubeAuthButton({ onAuthenticated, isAuthenticated = false }: 
     setAuthStatus('disconnected');
     setDeviceInfo(null);
     setGoogleOpened(false);
+    setPopupBlocked(false);
   };
 
   return (
@@ -213,7 +222,7 @@ export function YouTubeAuthButton({ onAuthenticated, isAuthenticated = false }: 
           className="glass-strong rounded-2xl p-5"
         >
           <div className="space-y-4">
-            {/* Status message - different for countdown vs waiting */}
+            {/* Status message - different for countdown vs waiting vs blocked */}
             <div className="text-center">
               {countdown !== null ? (
                 <>
@@ -226,6 +235,19 @@ export function YouTubeAuthButton({ onAuthenticated, isAuthenticated = false }: 
                   </p>
                   <p className="text-sm text-[var(--text-muted)] mt-1">
                     Just paste the code when the page opens
+                  </p>
+                </>
+              ) : popupBlocked ? (
+                <>
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Check className="w-5 h-5 text-[var(--spotify-green)]" />
+                    <span className="text-[var(--spotify-green)] font-medium">Code copied to clipboard</span>
+                  </div>
+                  <p className="text-base font-medium text-[var(--text-primary)]">
+                    Tap the button below to sign in
+                  </p>
+                  <p className="text-sm text-[var(--text-muted)] mt-1">
+                    Your browser blocked the automatic popup
                   </p>
                 </>
               ) : (
@@ -270,26 +292,41 @@ export function YouTubeAuthButton({ onAuthenticated, isAuthenticated = false }: 
             )}
 
             {/* Action buttons */}
-            <div className="flex items-center justify-center gap-3 pt-2">
-              {/* Only show "Open sign-in page" after countdown finishes OR if user wants to reopen */}
-              {!countdown && (
-                <>
-                  <button
-                    onClick={handleOpenGoogle}
-                    className="text-sm text-[var(--accent)] hover:text-[var(--accent-light)] transition-colors inline-flex items-center gap-1.5 font-medium"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    Reopen sign-in page
-                  </button>
-                  <span className="text-[var(--text-muted)]">·</span>
-                </>
+            <div className="flex flex-col items-center gap-3 pt-2">
+              {/* Prominent button when popup was blocked (mobile) */}
+              {popupBlocked && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  onClick={handleOpenGoogle}
+                  className="w-full py-3 px-4 rounded-xl bg-[var(--youtube-red)] text-white font-semibold flex items-center justify-center gap-2 hover:bg-[var(--youtube-red)]/90 transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Open Google Sign-in
+                </motion.button>
               )}
-              <button
-                onClick={handleCancel}
-                className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
-              >
-                Cancel
-              </button>
+
+              <div className="flex items-center justify-center gap-3">
+                {/* Only show "Reopen" link after countdown finishes and popup wasn't blocked */}
+                {!countdown && !popupBlocked && (
+                  <>
+                    <button
+                      onClick={handleOpenGoogle}
+                      className="text-sm text-[var(--accent)] hover:text-[var(--accent-light)] transition-colors inline-flex items-center gap-1.5 font-medium"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      Reopen sign-in page
+                    </button>
+                    <span className="text-[var(--text-muted)]">·</span>
+                  </>
+                )}
+                <button
+                  onClick={handleCancel}
+                  className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>

@@ -8,6 +8,17 @@ import type { TransferProgress, TransferResult } from '@/types/transfer';
 const API_BASE = '/api/youtube';
 
 /**
+ * Error thrown when OAuth token is invalid or expired.
+ * Callers should clear the stored token and prompt for re-authentication.
+ */
+export class AuthError extends Error {
+  constructor(message: string = 'Authentication expired. Please reconnect.') {
+    super(message);
+    this.name = 'AuthError';
+  }
+}
+
+/**
  * Start the OAuth device flow.
  * Returns device code info that user must enter at the verification URL.
  */
@@ -78,6 +89,11 @@ export async function transferPlaylist(
   });
 
   if (!response.ok) {
+    // Handle 401 Unauthorized - token expired or invalid
+    if (response.status === 401) {
+      throw new AuthError('Your session has expired. Please reconnect to YouTube Music.');
+    }
+
     const errorText = await response.text();
     let error;
     try {

@@ -12,7 +12,7 @@ import { YouTubeAuthButton } from '@/components/YouTubeAuthButton';
 import { TransferProgress } from '@/components/TransferProgress';
 import { TransferResults } from '@/components/TransferResults';
 import { TransferBottomBar } from '@/components/TransferBottomBar';
-import { transferPlaylist } from '@/lib/youtubeMusic';
+import { transferPlaylist, AuthError } from '@/lib/youtubeMusic';
 import type { ParsedPlaylist } from '@/types/spotify';
 import type {
   TransferProgress as TransferProgressType,
@@ -99,6 +99,16 @@ export default function Home() {
         status: 'complete',
       });
     } catch (error) {
+      // Handle expired/invalid token by clearing auth state
+      if (error instanceof AuthError) {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch {
+          // localStorage might be unavailable
+        }
+        setOauthToken(null);
+      }
+
       setTransferProgress({
         current: 0,
         total: 0,
@@ -114,6 +124,10 @@ export default function Home() {
   const handleCloseResults = () => {
     setTransferResult(null);
     setTransferProgress(null);
+    // Clear playlists and return to default state after viewing results
+    setPlaylists([]);
+    setExcludedPlaylists(new Set());
+    setShowDropzone(true);
   };
 
   const handleBatchTransfer = async () => {
