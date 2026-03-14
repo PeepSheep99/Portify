@@ -23,11 +23,29 @@ export function TransferResults({ result, onClose, batchProgress }: TransferResu
 
   const hasMorePlaylists = batchProgress && batchProgress.current < batchProgress.total;
 
+  // Handle skipped playlists (already exist)
+  if (result.skipped) {
+    return (
+      <div className="glass-strong rounded-2xl p-6 text-center">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
+          <span className="text-3xl">⏭️</span>
+        </div>
+        <h2 className="text-xl font-bold text-yellow-400 mb-2">Playlist Skipped</h2>
+        <p className="text-[var(--text-secondary)] mb-4">
+          &quot;{result.playlist_name}&quot; already exists in your YouTube Music library.
+        </p>
+        <button onClick={onClose} className="px-6 py-2 rounded-xl bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] transition-colors">
+          Close
+        </button>
+      </div>
+    );
+  }
+
   const { playlistId, playlistName, tracksAdded, tracksFailed, matchResult } =
     result;
 
   // Calculate match rate percentage (0-100)
-  const matchRatePercent = Math.round(matchResult.matchRate * 100);
+  const matchRatePercent = Math.round(matchResult?.matchRate * 100 || 0);
 
   // Determine match rate color
   const getMatchRateColor = () => {
