@@ -44,7 +44,7 @@ created: 2026-03-15
 | 06-04-01 | 04 | 3 | REV-03 | unit | `pytest api/tests/test_spotify_matcher.py -x` | W0 | pending |
 | 06-05-01 | 05 | 4 | REV-04 | unit | `pytest api/tests/test_spotify_api.py -x` | W0 | pending |
 | 06-05-02 | 05 | 4 | REV-05 | integration | `pytest api/tests/test_reverse_transfer.py::test_sse_progress -x` | W0 | pending |
-| 06-05-03 | 05 | 4 | REV-06 | unit | `npm run test:run -- --testPathPattern=ReverseTransferResults` | W0 | pending |
+| 06-05-03 | 05 | 4 | REV-06 | unit | `npm run test:run -- --testPathPattern=TransferResults` | W0 | pending |
 
 *Status: pending · green · red · flaky*
 
