@@ -232,7 +232,46 @@ def validate_oauth_token(oauth_token_json: str) -> bool:
         return False
 
 
-def create_playlist_youtube_api(access_token: str, name: str, description: str = "") -> str:
+def find_playlist_by_name(access_token: str, name: str) -> Optional[str]:
+    """Find an existing playlist by name using YouTube Data API.
+
+    Args:
+        access_token: OAuth access token
+        name: Playlist name to search for
+
+    Returns:
+        Playlist ID if found, None otherwise
+    """
+    url = "https://www.googleapis.com/youtube/v3/playlists"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    params = {"part": "snippet", "mine": "true", "maxResults": 50}
+
+    try:
+        # Paginate through all playlists
+        while True:
+            response = requests.get(url, headers=headers, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            for playlist in data.get("items", []):
+                if playlist["snippet"]["title"] == name:
+                    playlist_id = playlist["id"]
+                    logger.info(f"Found existing playlist '{name}': {playlist_id}")
+                    return playlist_id
+
+            # Check for more pages
+            next_page = data.get("nextPageToken")
+            if not next_page:
+                break
+            params["pageToken"] = next_page
+
+        return None
+    except Exception as e:
+        logger.warning(f"Error searching for playlist: {e}")
+        return None
+
+
+def create_playlist_youtube_api(access_token: str, name: str, description: str = "", check_existing: bool = True) -> str:
     """Create a new playlist using YouTube Data API.
 
     YouTube Music's internal API doesn't accept OAuth tokens from TV-type clients,
@@ -242,14 +281,22 @@ def create_playlist_youtube_api(access_token: str, name: str, description: str =
         access_token: OAuth access token
         name: Playlist name
         description: Optional playlist description
+        check_existing: If True, return existing playlist ID if one with same name exists
 
     Returns:
-        Playlist ID of the newly created playlist
+        Playlist ID of the created or existing playlist
 
     Raises:
         Exception: If playlist creation fails
     """
     import traceback
+
+    # Check for existing playlist with same name
+    if check_existing:
+        existing_id = find_playlist_by_name(access_token, name)
+        if existing_id:
+            logger.info(f"Reusing existing playlist '{name}': {existing_id}")
+            return existing_id
 
     if not description:
         description = "Imported from Spotify using Portify"
