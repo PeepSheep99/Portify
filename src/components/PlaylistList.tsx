@@ -2,18 +2,14 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Music, ChevronDown, ArrowRight, Loader2, ListMusic } from 'lucide-react';
-import { Checkbox } from '@/components/ui';
+import { Heart, Music, ChevronDown, X, ListMusic } from 'lucide-react';
 import type { ParsedPlaylist, ParsedTrack } from '@/types/spotify';
 
 interface PlaylistListProps {
   playlists: ParsedPlaylist[];
-  onTransfer?: (playlist: ParsedPlaylist) => void;
+  excludedIds?: string[];
+  onToggleExclude?: (name: string) => void;
   transferringPlaylist?: ParsedPlaylist | null;
-  selectedIds?: string[];
-  onToggleSelect?: (name: string) => void;
-  onSelectAll?: () => void;
-  onDeselectAll?: () => void;
 }
 
 // Generate a unique gradient based on string hash
@@ -37,7 +33,7 @@ function TrackItem({ track, index }: { track: ParsedTrack; index: number }) {
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.03, duration: 0.2 }}
-      className="group flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-white/5 transition-colors"
+      className="group flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-gray-50 transition-colors"
     >
       {/* Mini album art placeholder */}
       <div
@@ -46,10 +42,10 @@ function TrackItem({ track, index }: { track: ParsedTrack; index: number }) {
       />
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-white/90 truncate">
+        <p className="text-sm font-medium text-gray-900 truncate">
           {track.name}
         </p>
-        <p className="text-xs text-white/50 truncate">
+        <p className="text-xs text-gray-500 truncate">
           {track.artist}
           {track.album && ` • ${track.album}`}
         </p>
@@ -60,65 +56,48 @@ function TrackItem({ track, index }: { track: ParsedTrack; index: number }) {
 
 interface PlaylistCardProps {
   playlist: ParsedPlaylist;
-  onTransfer?: (playlist: ParsedPlaylist) => void;
   isTransferring?: boolean;
   index: number;
-  isSelected?: boolean;
-  onToggleSelect?: () => void;
+  isExcluded?: boolean;
+  onToggleExclude?: () => void;
 }
 
 function PlaylistCard({
   playlist,
-  onTransfer,
   isTransferring,
   index,
-  isSelected,
-  onToggleSelect,
+  isExcluded,
+  onToggleExclude,
 }: PlaylistCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const isLikedSongs = playlist.source === 'liked_songs';
   const gradient = useMemo(() => generateGradient(playlist.name), [playlist.name]);
 
-  const handleTransfer = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onTransfer) {
-      onTransfer(playlist);
-    }
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1, duration: 0.3 }}
-      className={`glass rounded-2xl overflow-hidden transition-all duration-300 ${
-        isTransferring ? 'glow-info animate-pulse-glow' : ''
-      }`}
+      className={`bg-white rounded-2xl overflow-hidden transition-all duration-300 shadow-sm border border-gray-200 ${
+        isTransferring ? 'ring-2 ring-blue-400 animate-pulse' : ''
+      } ${isExcluded ? 'opacity-50' : ''}`}
     >
       {/* Gradient accent bar */}
       <div className="h-1 gradient-brand" />
 
-      <div className="p-4">
-        <div className="flex items-center gap-4">
-          {/* Checkbox for selection */}
-          {onToggleSelect && (
-            <Checkbox
-              checked={isSelected || false}
-              onChange={onToggleSelect}
-              disabled={isTransferring}
-            />
-          )}
+      <div className="p-3 sm:p-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           {/* Album art placeholder */}
           <motion.div
-            className="w-16 h-16 rounded-xl flex-shrink-0 flex items-center justify-center"
+            className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl flex-shrink-0 flex items-center justify-center"
             style={{ background: gradient }}
             whileHover={{ scale: 1.05 }}
           >
             {isLikedSongs ? (
-              <Heart className="w-8 h-8 text-white/80" fill="currentColor" />
+              <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-white/80" fill="currentColor" />
             ) : (
-              <Music className="w-8 h-8 text-white/60" />
+              <Music className="w-6 h-6 sm:w-8 sm:h-8 text-white/60" />
             )}
           </motion.div>
 
@@ -127,15 +106,15 @@ function PlaylistCard({
             onClick={() => setIsExpanded(!isExpanded)}
             className="flex-1 text-left min-w-0"
           >
-            <h3 className="text-lg font-semibold text-white/95 truncate">
+            <h3 className={`text-lg font-semibold text-gray-900 truncate ${isExcluded ? 'line-through' : ''}`}>
               {playlist.name}
             </h3>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-sm text-white/50">
+              <span className="text-sm text-gray-500">
                 {playlist.tracks.length} track{playlist.tracks.length !== 1 ? 's' : ''}
               </span>
               <motion.span
-                className="text-white/30"
+                className="text-gray-400"
                 animate={{ rotate: isExpanded ? 180 : 0 }}
                 transition={{ duration: 0.2 }}
               >
@@ -144,43 +123,26 @@ function PlaylistCard({
             </div>
           </button>
 
-          {/* Transfer button */}
-          <motion.button
-            onClick={handleTransfer}
-            disabled={!onTransfer || isTransferring}
-            className={`relative px-5 py-2.5 rounded-xl text-sm font-medium transition-all overflow-hidden ${
-              onTransfer && !isTransferring
-                ? 'glass-strong text-white hover:glow-youtube'
-                : 'bg-white/5 text-white/30 cursor-not-allowed'
-            }`}
-            whileHover={onTransfer && !isTransferring ? { scale: 1.05 } : undefined}
-            whileTap={onTransfer && !isTransferring ? { scale: 0.95 } : undefined}
-            title={
-              !onTransfer
-                ? 'Connect YouTube Music to enable transfer'
-                : isTransferring
-                  ? 'Transfer in progress...'
-                  : 'Transfer to YouTube Music'
-            }
-          >
-            {/* Gradient background for enabled state */}
-            {onTransfer && !isTransferring && (
-              <div className="absolute inset-0 bg-gradient-to-r from-[#1db954]/20 to-[#ff0000]/20 opacity-0 hover:opacity-100 transition-opacity" />
-            )}
-            <span className="relative flex items-center gap-2">
-              {isTransferring ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Transferring...</span>
-                </>
-              ) : (
-                <>
-                  <ArrowRight className="w-4 h-4" />
-                  <span>Transfer</span>
-                </>
-              )}
-            </span>
-          </motion.button>
+          {/* Exclusion X button */}
+          {onToggleExclude && (
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleExclude();
+              }}
+              disabled={isTransferring}
+              className={`p-2 rounded-lg transition-colors ${
+                isExcluded
+                  ? 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                  : 'bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-500'
+              } ${isTransferring ? 'opacity-50 cursor-not-allowed' : ''}`}
+              whileHover={!isTransferring ? { scale: 1.1 } : undefined}
+              whileTap={!isTransferring ? { scale: 0.9 } : undefined}
+              title={isExcluded ? 'Include playlist' : 'Exclude playlist'}
+            >
+              <X className="w-5 h-5" />
+            </motion.button>
+          )}
         </div>
 
         {/* Expanded track list */}
@@ -193,7 +155,7 @@ function PlaylistCard({
               transition={{ duration: 0.3 }}
               className="overflow-hidden"
             >
-              <div className="mt-4 pt-4 border-t border-white/10">
+              <div className="mt-4 pt-4 border-t border-gray-200">
                 <ul className="max-h-64 overflow-y-auto space-y-1 pr-2">
                   {playlist.tracks.map((track, idx) => (
                     <TrackItem
@@ -214,12 +176,9 @@ function PlaylistCard({
 
 export function PlaylistList({
   playlists,
-  onTransfer,
+  excludedIds = [],
+  onToggleExclude,
   transferringPlaylist,
-  selectedIds = [],
-  onToggleSelect,
-  onSelectAll,
-  onDeselectAll,
 }: PlaylistListProps) {
   if (playlists.length === 0) {
     return (
@@ -228,11 +187,11 @@ export function PlaylistList({
         animate={{ opacity: 1 }}
         className="text-center py-12"
       >
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full glass flex items-center justify-center">
-          <Music className="w-8 h-8 text-white/30" />
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+          <Music className="w-8 h-8 text-gray-400" />
         </div>
-        <p className="text-white/50">No playlists loaded</p>
-        <p className="mt-1 text-sm text-white/30">
+        <p className="text-gray-500">No playlists loaded</p>
+        <p className="mt-1 text-sm text-gray-400">
           Drop your Spotify JSON files above to get started
         </p>
       </motion.div>
@@ -252,7 +211,7 @@ export function PlaylistList({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-24">
       {/* Liked Songs section */}
       {likedSongs.length > 0 && (
         <section>
@@ -264,7 +223,7 @@ export function PlaylistList({
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center">
               <Heart className="w-4 h-4 text-white" fill="currentColor" />
             </div>
-            <h2 className="text-xl font-bold text-white/95">
+            <h2 className="text-xl font-bold text-gray-900">
               Liked Songs
             </h2>
           </motion.div>
@@ -273,11 +232,10 @@ export function PlaylistList({
               <PlaylistCard
                 key={`liked-${index}`}
                 playlist={playlist}
-                onTransfer={onTransfer}
                 isTransferring={isPlaylistTransferring(playlist)}
                 index={index}
-                isSelected={selectedIds.includes(playlist.name)}
-                onToggleSelect={onToggleSelect ? () => onToggleSelect(playlist.name) : undefined}
+                isExcluded={excludedIds.includes(playlist.name)}
+                onToggleExclude={onToggleExclude ? () => onToggleExclude(playlist.name) : undefined}
               />
             ))}
           </div>
@@ -296,40 +254,22 @@ export function PlaylistList({
             <div className="w-8 h-8 rounded-lg gradient-brand flex items-center justify-center">
               <ListMusic className="w-4 h-4 text-white" />
             </div>
-            <h2 className="text-xl font-bold text-white/95">
+            <h2 className="text-xl font-bold text-gray-900">
               Playlists
             </h2>
-            <span className="px-2 py-0.5 rounded-full text-xs bg-white/10 text-white/60">
+            <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600">
               {regularPlaylists.length}
             </span>
-            {onSelectAll && onDeselectAll && regularPlaylists.length > 1 && (
-              <div className="ml-auto flex items-center gap-2">
-                <button
-                  onClick={onSelectAll}
-                  className="text-xs text-white/40 hover:text-white/70 transition-colors"
-                >
-                  Select all
-                </button>
-                <span className="text-white/20">|</span>
-                <button
-                  onClick={onDeselectAll}
-                  className="text-xs text-white/40 hover:text-white/70 transition-colors"
-                >
-                  Deselect all
-                </button>
-              </div>
-            )}
           </motion.div>
           <div className="space-y-4">
             {regularPlaylists.map((playlist, index) => (
               <PlaylistCard
                 key={`playlist-${playlist.name}-${index}`}
                 playlist={playlist}
-                onTransfer={onTransfer}
                 isTransferring={isPlaylistTransferring(playlist)}
                 index={index + likedSongs.length}
-                isSelected={selectedIds.includes(playlist.name)}
-                onToggleSelect={onToggleSelect ? () => onToggleSelect(playlist.name) : undefined}
+                isExcluded={excludedIds.includes(playlist.name)}
+                onToggleExclude={onToggleExclude ? () => onToggleExclude(playlist.name) : undefined}
               />
             ))}
           </div>
