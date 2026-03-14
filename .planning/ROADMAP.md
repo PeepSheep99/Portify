@@ -10,6 +10,7 @@ Minimal viable product: Spotify GDPR JSON export -> YouTube Music playlists. Two
 - [x] **Phase 2: YouTube Music + Transfer** — OAuth, matching, playlist creation, progress UI (completed 2026-03-13)
 - [x] **Phase 3: UI Polish & UX Refinements** — Icons, progress bar, dropzone visibility, playlist selection (completed 2026-03-14)
 - [x] **Phase 4: UX Overhaul & Visual Refresh** — Interaction fixes, visual redesign, mobile optimization (completed 2026-03-14)
+- [ ] **Phase 5: Code Cleanup & Deployment** — Remove dead code, structure cleanup, Vercel production deployment
 
 ## Phase Details
 
@@ -94,6 +95,22 @@ Plans:
   8. All test files have real imports and passing assertions
   9. REQUIREMENTS.md contains all 21 requirements with traceability
 
+### Phase 5: Code Cleanup & Deployment
+**Goal:** Clean up codebase, remove dead code, and deploy to Vercel production
+**Depends on:** Phase 4
+**Requirements**: None (cleanup/deployment phase)
+**Plans:** 0/? plans
+
+Plans:
+- [ ] TBD
+
+**Success Criteria**:
+  1. No ESLint warnings/errors
+  2. No unused imports or dead code
+  3. All tests pass
+  4. App deploys successfully to Vercel
+  5. Production app works end-to-end (upload → auth → transfer)
+
 ## Progress
 
 | Phase | Plans | Status |
@@ -102,6 +119,7 @@ Plans:
 | 2. YouTube Music + Transfer | 4/4 | Complete |
 | 3. UI Polish & UX Refinements | 3/3 | Complete |
 | 4. UX Overhaul & Visual Refresh | 6/6 | Complete |
+| 5. Code Cleanup & Deployment | 0/? | Pending |
 
 ---
 *Roadmap created: 2026-03-13*
