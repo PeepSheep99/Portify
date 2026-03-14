@@ -99,17 +99,19 @@ Plans:
 **Goal:** Clean up codebase, remove dead code, and deploy to Vercel production
 **Depends on:** Phase 4
 **Requirements**: None (cleanup/deployment phase)
-**Plans:** 0/? plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD
+- [ ] 05-01-PLAN.md — ESLint cleanup + dead code removal
+- [ ] 05-02-PLAN.md — Fix failing frontend tests (update assertions)
+- [ ] 05-03-PLAN.md — Python requirements split + Vercel deployment
 
 **Success Criteria**:
   1. No ESLint warnings/errors
   2. No unused imports or dead code
   3. All tests pass
   4. App deploys successfully to Vercel
-  5. Production app works end-to-end (upload → auth → transfer)
+  5. Production app works end-to-end (upload -> auth -> transfer)
 
 ## Progress
 
@@ -119,7 +121,7 @@ Plans:
 | 2. YouTube Music + Transfer | 4/4 | Complete |
 | 3. UI Polish & UX Refinements | 3/3 | Complete |
 | 4. UX Overhaul & Visual Refresh | 6/6 | Complete |
-| 5. Code Cleanup & Deployment | 0/? | Pending |
+| 5. Code Cleanup & Deployment | 0/3 | Planned |
 
 ---
 *Roadmap created: 2026-03-13*
