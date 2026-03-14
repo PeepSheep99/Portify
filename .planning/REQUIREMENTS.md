@@ -14,8 +14,8 @@
 ### YouTube Music Export
 
 - [x] **DST-01**: User can connect YouTube Music account
-- [ ] **DST-02**: User can create playlist on YouTube Music
-- [ ] **DST-03**: User can add songs to YouTube Music library
+- [x] **DST-02**: User can create playlist on YouTube Music
+- [x] **DST-03**: User can add songs to YouTube Music library
 
 ### Track Matching
 
@@ -25,8 +25,16 @@
 ### User Experience
 
 - [x] **UX-01**: User can drag-and-drop JSON file
-- [ ] **UX-02**: User sees progress during transfer
-- [ ] **UX-03**: User sees summary of results
+- [x] **UX-02**: User sees progress during transfer
+- [x] **UX-03**: User sees summary of results
+- [x] **UX-04**: User can transfer all playlists in batch (opt-out selection model)
+- [x] **UX-05**: User gets toast feedback on copy and auto-opens verification URL
+- [x] **UX-06**: User sees unified 0-100% progress that never resets
+- [x] **UX-07**: App displays with light theme (white background, green accents)
+- [x] **UX-08**: No hydration errors on page load
+- [x] **UX-09**: No debug logs visible in browser console
+- [x] **UX-10**: App is responsive on mobile devices
+- [x] **UX-11**: No dead code exports or unused components
 
 ### Deployment
 
@@ -61,16 +69,24 @@
 | SRC-03 | Phase 1 | Complete |
 | UX-01 | Phase 1 | Complete |
 | DST-01 | Phase 2 | Complete |
-| DST-02 | Phase 2 | Pending |
-| DST-03 | Phase 2 | Pending |
+| DST-02 | Phase 2 | Complete |
+| DST-03 | Phase 2 | Complete |
 | MTH-01 | Phase 2 | Complete |
 | MTH-02 | Phase 2 | Complete |
-| UX-02 | Phase 2 | Pending |
-| UX-03 | Phase 2 | Pending |
+| UX-02 | Phase 2 | Complete |
+| UX-03 | Phase 2 | Complete |
+| UX-04 | Phase 4 | Complete |
+| UX-05 | Phase 4 | Complete |
+| UX-06 | Phase 4 | Complete |
+| UX-07 | Phase 4 | Complete |
+| UX-08 | Phase 4 | Complete |
+| UX-09 | Phase 4 | Complete |
+| UX-10 | Phase 4 | Complete |
+| UX-11 | Phase 4 | Complete |
 
 **Coverage:**
-- v1 requirements: 13 total
-- Mapped to phases: 13
+- v1 requirements: 21 total
+- Mapped to phases: 21
 - Unmapped: 0
 
 ---
