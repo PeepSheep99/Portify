@@ -2,74 +2,74 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ExternalLink, ChevronDown } from 'lucide-react';
-import { AnimatedNumber, AnimatedPercentage, ConfettiCelebration } from '@/components/ui';
-import type { TransferResult } from '@/types/transfer';
+import { ExternalLink, ChevronDown, Check, SkipForward, AlertCircle } from 'lucide-react';
+import { ConfettiCelebration } from '@/components/ui';
+import type { BatchTransferResult, TransferResult } from '@/types/transfer';
 
 interface TransferResultsProps {
-  result: TransferResult | null;
+  batchResult: BatchTransferResult;
   onClose: () => void;
-  batchProgress?: { current: number; total: number } | null;
 }
 
-export function TransferResults({ result, onClose, batchProgress }: TransferResultsProps) {
-  const [expandedSection, setExpandedSection] = useState<
-    'matched' | 'unmatched' | null
-  >(null);
+export function TransferResults({ batchResult, onClose }: TransferResultsProps) {
+  const [expandedPlaylist, setExpandedPlaylist] = useState<string | null>(null);
 
-  if (!result) {
-    return null;
-  }
+  const { results, totalPlaylists, created, skipped } = batchResult;
 
-  const hasMorePlaylists = batchProgress && batchProgress.current < batchProgress.total;
+  // YouTube Music library URL
+  const youtubeLibraryUrl = 'https://music.youtube.com/library/playlists';
 
-  // Handle skipped playlists (already exist)
-  if (result.skipped) {
-    return (
-      <div className="glass-strong rounded-2xl p-6 text-center">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
-          <span className="text-3xl">⏭️</span>
+  const togglePlaylist = (name: string) => {
+    setExpandedPlaylist((prev) => (prev === name ? null : name));
+  };
+
+  const getStatusIcon = (result: TransferResult) => {
+    if (result.skipped) {
+      return (
+        <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+          <SkipForward className="w-4 h-4 text-yellow-400" />
         </div>
-        <h2 className="text-xl font-bold text-yellow-400 mb-2">Playlist Skipped</h2>
-        <p className="text-[var(--text-secondary)] mb-4">
-          &quot;{result.playlist_name}&quot; already exists in your YouTube Music library.
-        </p>
-        <button onClick={onClose} className="px-6 py-2 rounded-xl bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] transition-colors">
-          Close
-        </button>
+      );
+    }
+    if (result.tracksAdded > 0) {
+      return (
+        <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+          <Check className="w-4 h-4 text-green-400" />
+        </div>
+      );
+    }
+    return (
+      <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+        <AlertCircle className="w-4 h-4 text-red-400" />
       </div>
     );
-  }
-
-  const { playlistId, playlistName, tracksAdded, tracksFailed, matchResult } =
-    result;
-
-  // Calculate match rate percentage (0-100)
-  const matchRatePercent = Math.round(matchResult?.matchRate * 100 || 0);
-
-  // Determine match rate color
-  const getMatchRateColor = () => {
-    if (matchRatePercent >= 80) return 'text-green-400';
-    if (matchRatePercent >= 50) return 'text-yellow-400';
-    return 'text-red-400';
   };
 
-  const getMatchRateBg = () => {
-    if (matchRatePercent >= 80) return 'from-green-500/20 to-green-500/5';
-    if (matchRatePercent >= 50) return 'from-yellow-500/20 to-yellow-500/5';
-    return 'from-red-500/20 to-red-500/5';
+  const getStatusText = (result: TransferResult) => {
+    if (result.skipped) {
+      return 'Already exists';
+    }
+    if (result.tracksAdded > 0) {
+      const failedCount = result.tracksFailed || 0;
+      if (failedCount > 0) {
+        return `${result.tracksAdded} tracks added, ${failedCount} not found`;
+      }
+      return `${result.tracksAdded} tracks added`;
+    }
+    return result.reason || 'Failed to transfer';
   };
 
-  const toggleSection = (section: 'matched' | 'unmatched') => {
-    setExpandedSection((prev) => (prev === section ? null : section));
+  const getPlaylistName = (result: TransferResult) => {
+    return result.playlistName || result.playlist_name || 'Unknown';
   };
 
-  const youtubePlaylistUrl = `https://music.youtube.com/playlist?list=${playlistId}`;
+  // Check if all transfers were successful (created or skipped is fine)
+  const allSuccessful = results.every(r => r.skipped || r.tracksAdded > 0);
 
   return (
     <>
-      {/* Confetti celebration */}
-      <ConfettiCelebration trigger={true} />
+      {/* Confetti only if at least one playlist was created */}
+      {created > 0 && <ConfettiCelebration trigger={true} />}
 
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -77,16 +77,20 @@ export function TransferResults({ result, onClose, batchProgress }: TransferResu
         transition={{ type: 'spring', stiffness: 300, damping: 25 }}
         className="glass-strong rounded-2xl p-6 max-h-[85vh] overflow-y-auto"
       >
-        {/* Success banner */}
+        {/* Success header */}
         <div className="mb-6 text-center">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 400, delay: 0.2 }}
-            className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-green-500/30 to-green-500/10"
+            className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${
+              allSuccessful
+                ? 'bg-gradient-to-br from-green-500/30 to-green-500/10'
+                : 'bg-gradient-to-br from-yellow-500/30 to-yellow-500/10'
+            }`}
           >
             <motion.svg
-              className="h-8 w-8 text-green-400"
+              className={`h-8 w-8 ${allSuccessful ? 'text-green-400' : 'text-yellow-400'}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -107,199 +111,116 @@ export function TransferResults({ result, onClose, batchProgress }: TransferResu
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-2xl font-bold text-[var(--text-primary)]"
+            className="text-2xl font-bold text-[var(--text-primary)] mb-2"
           >
-            {playlistName}
+            Transfer Complete
           </motion.h2>
 
-          <motion.a
-            href={youtubePlaylistUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-[var(--text-secondary)]"
+          >
+            {totalPlaylists === 1
+              ? '1 playlist processed'
+              : `${totalPlaylists} playlists processed`}
+          </motion.p>
+
+          {/* Summary badges */}
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-3 inline-flex items-center gap-2 text-base text-blue-400 hover:text-blue-300 transition-colors font-medium"
+            className="flex justify-center gap-3 mt-4"
           >
-            <span>Open in YouTube Music</span>
-            <ExternalLink className="w-5 h-5" />
-          </motion.a>
+            {created > 0 && (
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-500/20 text-green-400">
+                {created} created
+              </span>
+            )}
+            {skipped > 0 && (
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-500/20 text-yellow-400">
+                {skipped} skipped
+              </span>
+            )}
+          </motion.div>
         </div>
 
-        {/* Stats cards */}
+        {/* Playlist results list */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mb-6 grid grid-cols-3 gap-3"
+          transition={{ delay: 0.5 }}
+          className="space-y-2 mb-6"
         >
-          {/* Tracks added */}
-          <div className="glass rounded-xl p-5 text-center">
-            <div className="text-4xl font-black text-green-400">
-              <AnimatedNumber value={tracksAdded} />
-            </div>
-            <p className="text-sm text-[var(--text-muted)] mt-2">added</p>
-          </div>
+          {results.map((result, index) => {
+            const name = getPlaylistName(result);
+            const hasUnmatched = result.matchResult?.unmatched && result.matchResult.unmatched.length > 0;
+            const isExpanded = expandedPlaylist === name;
 
-          {/* Tracks failed */}
-          <div className="glass rounded-xl p-5 text-center">
-            <div className="text-4xl font-black text-[var(--text-secondary)]">
-              <AnimatedNumber value={tracksFailed} />
-            </div>
-            <p className="text-sm text-[var(--text-muted)] mt-2">failed</p>
-          </div>
-
-          {/* Match rate with gauge */}
-          <div className={`glass rounded-xl p-5 text-center bg-gradient-to-b ${getMatchRateBg()}`}>
-            <div className={`text-4xl font-black ${getMatchRateColor()}`}>
-              <AnimatedPercentage value={matchRatePercent} />
-            </div>
-            <p className="text-sm text-[var(--text-muted)] mt-2">match rate</p>
-          </div>
-        </motion.div>
-
-        {/* Expandable sections */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="space-y-3"
-        >
-          {/* Matched tracks */}
-          {matchResult.matched.length > 0 && (
-            <div className="glass rounded-xl overflow-hidden">
-              <button
-                onClick={() => toggleSection('matched')}
-                className="flex w-full items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
-                aria-expanded={expandedSection === 'matched'}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
-                  <span className="font-semibold text-[var(--text-primary)] text-base">
-                    Matched tracks
-                  </span>
-                  <span className="text-base text-[var(--text-muted)]">
-                    ({matchResult.matched.length})
-                  </span>
-                </div>
-                <motion.span
-                  animate={{ rotate: expandedSection === 'matched' ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="text-[var(--text-muted)]"
+            return (
+              <div key={`${name}-${index}`} className="glass rounded-xl overflow-hidden">
+                <button
+                  onClick={() => hasUnmatched && togglePlaylist(name)}
+                  disabled={!hasUnmatched}
+                  className={`flex w-full items-center gap-3 p-4 text-left transition-colors ${
+                    hasUnmatched ? 'hover:bg-white/5 cursor-pointer' : 'cursor-default'
+                  }`}
                 >
-                  <ChevronDown className="w-5 h-5" />
-                </motion.span>
-              </button>
+                  {getStatusIcon(result)}
 
-              <AnimatePresence>
-                {expandedSection === 'matched' && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="max-h-56 overflow-y-auto border-t border-[var(--border)] p-3">
-                      <ul className="space-y-2">
-                        {matchResult.matched.map((track, index) => (
-                          <motion.li
-                            key={`matched-${index}`}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.02 }}
-                            className="flex items-center justify-between text-base py-2 px-3 rounded-lg hover:bg-white/5"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <span className="text-[var(--text-primary)] truncate block font-medium">
-                                {track.original.name}
-                              </span>
-                              <span className="text-[var(--text-muted)] text-sm">
-                                {track.original.artist} &#8594; {track.matched.title}
-                              </span>
-                            </div>
-                            <span className="ml-2 px-2 py-1 rounded-full text-sm font-semibold bg-green-500/20 text-green-400">
-                              {Math.round(track.confidence)}%
-                            </span>
-                          </motion.li>
-                        ))}
-                      </ul>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[var(--text-primary)] truncate">
+                      {name}
+                    </p>
+                    <p className="text-sm text-[var(--text-muted)]">
+                      {getStatusText(result)}
+                    </p>
+                  </div>
 
-          {/* Unmatched tracks */}
-          {matchResult.unmatched.length > 0 && (
-            <div className="glass rounded-xl overflow-hidden">
-              <button
-                onClick={() => toggleSection('unmatched')}
-                className="flex w-full items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
-                aria-expanded={expandedSection === 'unmatched'}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-red-500" />
-                  <span className="font-semibold text-[var(--text-primary)] text-base">
-                    Unmatched tracks
-                  </span>
-                  <span className="text-base text-[var(--text-muted)]">
-                    ({matchResult.unmatched.length})
-                  </span>
-                </div>
-                <motion.span
-                  animate={{ rotate: expandedSection === 'unmatched' ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="text-[var(--text-muted)]"
-                >
-                  <ChevronDown className="w-5 h-5" />
-                </motion.span>
-              </button>
+                  {hasUnmatched && (
+                    <motion.span
+                      animate={{ rotate: isExpanded ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-[var(--text-muted)]"
+                    >
+                      <ChevronDown className="w-5 h-5" />
+                    </motion.span>
+                  )}
+                </button>
 
-              <AnimatePresence>
-                {expandedSection === 'unmatched' && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="max-h-56 overflow-y-auto border-t border-[var(--border)] p-3">
-                      <ul className="space-y-2">
-                        {matchResult.unmatched.map((track, index) => (
-                          <motion.li
-                            key={`unmatched-${index}`}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.02 }}
-                            className="flex items-center justify-between text-base py-2 px-3 rounded-lg hover:bg-white/5"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <span className="text-[var(--text-primary)] truncate block font-medium">
-                                {track.original.name}
-                              </span>
-                              <span className="text-[var(--text-muted)] text-sm">
-                                {track.original.artist}
-                              </span>
-                            </div>
-                            <span className="ml-2 px-2 py-1 rounded-full text-sm font-semibold bg-red-500/20 text-red-400">
-                              {track.reason === 'not_found'
-                                ? 'Not found'
-                                : track.reason === 'low_confidence'
-                                  ? 'Low match'
-                                  : 'Error'}
-                            </span>
-                          </motion.li>
-                        ))}
-                      </ul>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
+                {/* Expandable section for unmatched tracks */}
+                <AnimatePresence>
+                  {isExpanded && hasUnmatched && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="max-h-40 overflow-y-auto border-t border-[var(--border)] p-3">
+                        <p className="text-xs text-[var(--text-muted)] mb-2 uppercase tracking-wide">
+                          Tracks not found
+                        </p>
+                        <ul className="space-y-1">
+                          {result.matchResult?.unmatched.map((track, idx) => (
+                            <li
+                              key={`unmatched-${idx}`}
+                              className="text-sm text-[var(--text-secondary)] py-1"
+                            >
+                              {track.original.name} - {track.original.artist}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
         </motion.div>
 
         {/* Action buttons */}
@@ -307,34 +228,26 @@ export function TransferResults({ result, onClose, batchProgress }: TransferResu
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="mt-8 flex flex-col items-center gap-3"
+          className="flex flex-col items-center gap-3"
         >
-          {/* Batch progress indicator */}
-          {batchProgress && batchProgress.total > 1 && (
-            <p className="text-sm text-[var(--text-muted)]">
-              {batchProgress.current} of {batchProgress.total} playlists complete
-            </p>
-          )}
+          <a
+            href={youtubeLibraryUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors font-medium"
+          >
+            <span>Open YouTube Music Library</span>
+            <ExternalLink className="w-4 h-4" />
+          </a>
 
-          <div className="flex justify-center gap-4">
-            <motion.button
-              onClick={onClose}
-              className="bg-[var(--spotify-green)] rounded-xl px-8 py-3 font-semibold text-lg text-white transition-all hover:bg-[var(--spotify-green-light)] shadow-lg glow-spotify"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {hasMorePlaylists ? (
-                <span className="flex items-center gap-2">
-                  Continue
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </span>
-              ) : (
-                'Done'
-              )}
-            </motion.button>
-          </div>
+          <motion.button
+            onClick={onClose}
+            className="bg-[var(--spotify-green)] rounded-xl px-8 py-3 font-semibold text-lg text-white transition-all hover:bg-[var(--spotify-green-light)] shadow-lg glow-spotify"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Done
+          </motion.button>
         </motion.div>
       </motion.div>
     </>

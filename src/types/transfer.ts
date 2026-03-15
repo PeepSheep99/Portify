@@ -47,9 +47,24 @@ export interface TransferProgress {
  * Final result of a playlist transfer operation.
  */
 export interface TransferResult {
-  playlistId: string;
+  playlistId?: string;
   playlistName: string;
   tracksAdded: number;
   tracksFailed: number;
-  matchResult: MatchResult;
+  matchResult?: MatchResult;
+  // For skipped playlists
+  skipped?: boolean;
+  reason?: string;
+  playlist_name?: string; // Backend uses snake_case
+}
+
+/**
+ * Aggregated result for batch playlist transfers.
+ */
+export interface BatchTransferResult {
+  results: TransferResult[];
+  totalPlaylists: number;
+  created: number;
+  skipped: number;
+  failed: number;
 }

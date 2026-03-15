@@ -1,226 +1,186 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { TransferResults } from './TransferResults';
+import type { BatchTransferResult } from '@/types/transfer';
 
-// Mock animated components to immediately show final values
+// Mock animated components
 vi.mock('@/components/ui', () => ({
-  AnimatedNumber: ({ value, className }: { value: number; className?: string }) => (
-    <span className={className}>{value}</span>
-  ),
-  AnimatedPercentage: ({ value, className }: { value: number; className?: string }) => (
-    <span className={className}>{value}%</span>
-  ),
   ConfettiCelebration: () => null,
 }));
 
-const mockResult = {
-  playlistId: 'playlist_123',
-  playlistName: 'My Awesome Playlist',
-  tracksAdded: 45,
-  tracksFailed: 5,
-  matchResult: {
-    matched: [
-      {
-        original: { name: 'Song 1', artist: 'Artist 1', album: 'Album 1' },
-        matched: { videoId: 'vid1', title: 'Song 1', artist: 'Artist 1' },
-        confidence: 98,
+const mockBatchResult: BatchTransferResult = {
+  results: [
+    {
+      playlistId: 'playlist_123',
+      playlistName: 'Chill Vibes',
+      tracksAdded: 6,
+      tracksFailed: 1,
+      matchResult: {
+        matched: [
+          {
+            original: { name: 'Song 1', artist: 'Artist 1', album: 'Album 1' },
+            matched: { videoId: 'vid1', title: 'Song 1', artist: 'Artist 1' },
+            confidence: 98,
+          },
+        ],
+        unmatched: [
+          {
+            original: { name: 'Rare Song', artist: 'Unknown', album: null },
+            reason: 'not_found' as const,
+          },
+        ],
+        total: 7,
+        matchRate: 0.86,
       },
-    ],
-    unmatched: [
-      {
-        original: { name: 'Rare Song', artist: 'Unknown', album: null },
-        reason: 'not_found' as const,
-      },
-    ],
-    total: 50,
-    matchRate: 0.9,
-  },
+    },
+    {
+      playlistName: 'Workout Mix',
+      tracksAdded: 0,
+      tracksFailed: 0,
+      skipped: true,
+      reason: 'Playlist already exists',
+    },
+  ],
+  totalPlaylists: 2,
+  created: 1,
+  skipped: 1,
+  failed: 0,
 };
 
 describe('TransferResults', () => {
   describe('rendering states', () => {
-    it('renders nothing when result is null', () => {
-      const { container } = render(
-        <TransferResults result={null} onClose={() => {}} />
-      );
-      expect(container.firstChild).toBeNull();
+    it('renders transfer complete header', () => {
+      render(<TransferResults batchResult={mockBatchResult} onClose={() => {}} />);
+      expect(screen.getByRole('heading', { name: /Transfer Complete/i })).toBeInTheDocument();
     });
 
-    it('renders success banner with playlist name', () => {
-      render(<TransferResults result={mockResult} onClose={() => {}} />);
-      expect(
-        screen.getByRole('heading', { name: /My Awesome Playlist/i })
-      ).toBeInTheDocument();
+    it('renders total playlists processed count', () => {
+      render(<TransferResults batchResult={mockBatchResult} onClose={() => {}} />);
+      expect(screen.getByText('2 playlists processed')).toBeInTheDocument();
     });
 
-    it('renders track counts', () => {
-      render(<TransferResults result={mockResult} onClose={() => {}} />);
-      expect(screen.getByText('45')).toBeInTheDocument();
-      expect(screen.getByText('added')).toBeInTheDocument();
-      expect(screen.getByText('5')).toBeInTheDocument();
-      expect(screen.getByText('failed')).toBeInTheDocument();
+    it('renders singular text for single playlist', () => {
+      const singleResult: BatchTransferResult = {
+        ...mockBatchResult,
+        results: [mockBatchResult.results[0]],
+        totalPlaylists: 1,
+        skipped: 0,
+      };
+      render(<TransferResults batchResult={singleResult} onClose={() => {}} />);
+      expect(screen.getByText('1 playlist processed')).toBeInTheDocument();
     });
 
-    it('renders link to YouTube Music playlist', () => {
-      render(<TransferResults result={mockResult} onClose={() => {}} />);
-      const link = screen.getByRole('link', { name: /open in youtube music/i });
-      expect(link).toHaveAttribute(
-        'href',
-        expect.stringContaining('playlist_123')
-      );
+    it('renders summary badges', () => {
+      render(<TransferResults batchResult={mockBatchResult} onClose={() => {}} />);
+      expect(screen.getByText('1 created')).toBeInTheDocument();
+      expect(screen.getByText('1 skipped')).toBeInTheDocument();
     });
   });
 
-  describe('match rate display', () => {
-    it('shows match rate percentage', () => {
-      render(<TransferResults result={mockResult} onClose={() => {}} />);
-      expect(screen.getByText('90%')).toBeInTheDocument();
+  describe('playlist list', () => {
+    it('renders all playlists with names', () => {
+      render(<TransferResults batchResult={mockBatchResult} onClose={() => {}} />);
+      expect(screen.getByText('Chill Vibes')).toBeInTheDocument();
+      expect(screen.getByText('Workout Mix')).toBeInTheDocument();
     });
 
-    it('uses green color for high match rate (>80%)', () => {
-      render(<TransferResults result={mockResult} onClose={() => {}} />);
-      const rateElement = screen.getByText('90%');
-      // Color class is on parent div
-      expect(rateElement.parentElement).toHaveClass('text-green-400');
+    it('shows track count for created playlists', () => {
+      render(<TransferResults batchResult={mockBatchResult} onClose={() => {}} />);
+      expect(screen.getByText(/6 tracks added, 1 not found/)).toBeInTheDocument();
     });
 
-    it('uses yellow color for medium match rate (50-80%)', () => {
-      const mediumResult = {
-        ...mockResult,
-        matchResult: { ...mockResult.matchResult, matchRate: 0.65 },
-      };
-      render(<TransferResults result={mediumResult} onClose={() => {}} />);
-      const rateElement = screen.getByText('65%');
-      // Color class is on parent div
-      expect(rateElement.parentElement).toHaveClass('text-yellow-400');
-    });
-
-    it('uses red color for low match rate (<50%)', () => {
-      const lowResult = {
-        ...mockResult,
-        matchResult: { ...mockResult.matchResult, matchRate: 0.3 },
-      };
-      render(<TransferResults result={lowResult} onClose={() => {}} />);
-      const rateElement = screen.getByText('30%');
-      // Color class is on parent div
-      expect(rateElement.parentElement).toHaveClass('text-red-400');
+    it('shows "Already exists" for skipped playlists', () => {
+      render(<TransferResults batchResult={mockBatchResult} onClose={() => {}} />);
+      expect(screen.getByText('Already exists')).toBeInTheDocument();
     });
   });
 
-  describe('expandable sections', () => {
-    it('can expand matched tracks list', () => {
-      render(<TransferResults result={mockResult} onClose={() => {}} />);
-      fireEvent.click(
-        screen.getByRole('button', { name: /^matched tracks/i })
-      );
-      // Look for text in the expanded list
-      expect(screen.getAllByText('Song 1').length).toBeGreaterThan(0);
-      expect(screen.getByText('98%')).toBeInTheDocument(); // confidence
+  describe('expandable unmatched tracks', () => {
+    it('can expand to see unmatched tracks', () => {
+      render(<TransferResults batchResult={mockBatchResult} onClose={() => {}} />);
+      // Click on the playlist with unmatched tracks
+      fireEvent.click(screen.getByText('Chill Vibes'));
+      expect(screen.getByText('Tracks not found')).toBeInTheDocument();
+      expect(screen.getByText(/Rare Song/)).toBeInTheDocument();
     });
 
-    it('can expand unmatched tracks list', () => {
-      render(<TransferResults result={mockResult} onClose={() => {}} />);
-      fireEvent.click(screen.getByText(/unmatched tracks/i));
-      expect(screen.getByText('Rare Song')).toBeInTheDocument();
-    });
-
-    it('shows reason for unmatched tracks', () => {
-      render(<TransferResults result={mockResult} onClose={() => {}} />);
-      fireEvent.click(screen.getByText(/unmatched tracks/i));
-      expect(screen.getByText(/not found/i)).toBeInTheDocument();
-    });
-
-    it('toggles expansion on repeated click', () => {
-      render(<TransferResults result={mockResult} onClose={() => {}} />);
-      const button = screen.getByRole('button', { name: /^matched tracks/i });
-      // Initially collapsed
-      expect(button).toHaveAttribute('aria-expanded', 'false');
-      fireEvent.click(button);
-      // Now expanded
-      expect(button).toHaveAttribute('aria-expanded', 'true');
-      fireEvent.click(button);
-      // Collapsed again
-      expect(button).toHaveAttribute('aria-expanded', 'false');
+    it('cannot expand skipped playlists', () => {
+      render(<TransferResults batchResult={mockBatchResult} onClose={() => {}} />);
+      const workoutMix = screen.getByText('Workout Mix').closest('button');
+      expect(workoutMix).toBeDisabled();
     });
   });
 
   describe('action buttons', () => {
-    it('calls onClose when Done button clicked', () => {
-      const onClose = vi.fn();
-      render(<TransferResults result={mockResult} onClose={onClose} />);
-      fireEvent.click(screen.getByRole('button', { name: /done/i }));
-      expect(onClose).toHaveBeenCalledTimes(1);
+    it('renders link to YouTube Music library', () => {
+      render(<TransferResults batchResult={mockBatchResult} onClose={() => {}} />);
+      const link = screen.getByRole('link', { name: /Open YouTube Music Library/i });
+      expect(link).toHaveAttribute('href', 'https://music.youtube.com/library/playlists');
     });
 
-    it('shows Continue button when batch has more playlists', () => {
+    it('calls onClose when Done button clicked', () => {
       const onClose = vi.fn();
-      render(
-        <TransferResults
-          result={mockResult}
-          onClose={onClose}
-          batchProgress={{ current: 1, total: 3 }}
-        />
-      );
-      fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+      render(<TransferResults batchResult={mockBatchResult} onClose={onClose} />);
+      fireEvent.click(screen.getByRole('button', { name: /done/i }));
       expect(onClose).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('edge cases', () => {
-    it('handles result with all tracks matched', () => {
-      const perfectResult = {
-        ...mockResult,
-        tracksFailed: 0,
-        matchResult: {
-          ...mockResult.matchResult,
-          unmatched: [],
-          matchRate: 1,
-        },
+    it('handles all playlists created successfully', () => {
+      const allCreated: BatchTransferResult = {
+        results: [
+          {
+            playlistId: 'p1',
+            playlistName: 'Playlist 1',
+            tracksAdded: 10,
+            tracksFailed: 0,
+            matchResult: { matched: [], unmatched: [], total: 10, matchRate: 1 },
+          },
+        ],
+        totalPlaylists: 1,
+        created: 1,
+        skipped: 0,
+        failed: 0,
       };
-      render(<TransferResults result={perfectResult} onClose={() => {}} />);
-      expect(screen.getByText('100%')).toBeInTheDocument();
+      render(<TransferResults batchResult={allCreated} onClose={() => {}} />);
+      expect(screen.getByText('1 created')).toBeInTheDocument();
+      expect(screen.queryByText(/skipped/)).not.toBeInTheDocument();
     });
 
-    it('handles result with no tracks matched', () => {
-      const failedResult = {
-        ...mockResult,
-        tracksAdded: 0,
-        tracksFailed: 50,
-        matchResult: { ...mockResult.matchResult, matched: [], matchRate: 0 },
+    it('handles all playlists skipped', () => {
+      const allSkipped: BatchTransferResult = {
+        results: [
+          { playlistName: 'P1', tracksAdded: 0, tracksFailed: 0, skipped: true },
+          { playlistName: 'P2', tracksAdded: 0, tracksFailed: 0, skipped: true },
+        ],
+        totalPlaylists: 2,
+        created: 0,
+        skipped: 2,
+        failed: 0,
       };
-      render(<TransferResults result={failedResult} onClose={() => {}} />);
-      expect(screen.getByText('0%')).toBeInTheDocument();
+      render(<TransferResults batchResult={allSkipped} onClose={() => {}} />);
+      expect(screen.getByText('2 skipped')).toBeInTheDocument();
+      expect(screen.queryByText(/created/)).not.toBeInTheDocument();
     });
 
-    it('handles result with empty playlist', () => {
-      const emptyResult = {
-        ...mockResult,
-        tracksAdded: 0,
-        tracksFailed: 0,
-        matchResult: { matched: [], unmatched: [], total: 0, matchRate: 0 },
+    it('handles failed transfers', () => {
+      const withFailed: BatchTransferResult = {
+        results: [
+          {
+            playlistName: 'Failed Playlist',
+            tracksAdded: 0,
+            tracksFailed: 5,
+            reason: 'API error',
+          },
+        ],
+        totalPlaylists: 1,
+        created: 0,
+        skipped: 0,
+        failed: 1,
       };
-      const { container } = render(
-        <TransferResults result={emptyResult} onClose={() => {}} />
-      );
-      // Should render without errors
-      expect(container.firstChild).not.toBeNull();
-    });
-  });
-
-  describe('accessibility', () => {
-    it('expandable sections are keyboard accessible', () => {
-      render(<TransferResults result={mockResult} onClose={() => {}} />);
-      const expandButton = screen.getByRole('button', { name: /^matched tracks/i });
-      // Buttons are natively keyboard accessible (Enter/Space trigger click)
-      expect(expandButton).toHaveAttribute('aria-expanded', 'false');
-      fireEvent.click(expandButton);
-      expect(expandButton).toHaveAttribute('aria-expanded', 'true');
-    });
-
-    it('Done button has accessible label', () => {
-      render(<TransferResults result={mockResult} onClose={() => {}} />);
-      const doneButton = screen.getByRole('button', { name: /done/i });
-      expect(doneButton).toBeInTheDocument();
+      render(<TransferResults batchResult={withFailed} onClose={() => {}} />);
+      expect(screen.getByText('API error')).toBeInTheDocument();
     });
   });
 });

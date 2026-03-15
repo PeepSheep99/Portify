@@ -17,6 +17,7 @@ import type { ParsedPlaylist } from '@/types/spotify';
 import type {
   TransferProgress as TransferProgressType,
   TransferResult,
+  BatchTransferResult,
 } from '@/types/transfer';
 
 export default function Home() {
@@ -34,7 +35,7 @@ export default function Home() {
   });
   const [transferProgress, setTransferProgress] =
     useState<TransferProgressType | null>(null);
-  const [transferResult, setTransferResult] = useState<TransferResult | null>(
+  const [batchResult, setBatchResult] = useState<BatchTransferResult | null>(
     null
   );
   const [transferringPlaylist, setTransferringPlaylist] =
@@ -94,8 +95,8 @@ export default function Home() {
     setOauthToken(token);
   };
 
-  const handleTransfer = async (playlist: ParsedPlaylist) => {
-    if (!oauthToken) return;
+  const handleTransfer = async (playlist: ParsedPlaylist): Promise<TransferResult | null> => {
+    if (!oauthToken) return null;
 
     setTransferringPlaylist(playlist);
     setTransferProgress({
@@ -104,7 +105,6 @@ export default function Home() {
       phase: 'matching',
       status: 'in_progress',
     });
-    setTransferResult(null);
 
     try {
       // Fail-fast: validate token before starting transfer
@@ -119,13 +119,13 @@ export default function Home() {
           setTransferProgress(progress);
         });
       });
-      setTransferResult(result);
       setTransferProgress({
         current: playlist.tracks.length,
         total: playlist.tracks.length,
         phase: 'adding',
         status: 'complete',
       });
+      return result;
     } catch (error) {
       // Handle expired/invalid token by clearing auth state
       if (error instanceof AuthError) {
@@ -144,16 +144,19 @@ export default function Home() {
         status: 'error',
         error: error instanceof Error ? error.message : 'Transfer failed',
       });
-      // Keep modal open on error so user sees the message
-      // Don't clear transferringPlaylist here
-      return;
+      // Return error result
+      return {
+        playlistName: playlist.name,
+        tracksAdded: 0,
+        tracksFailed: playlist.tracks.length,
+        skipped: false,
+        reason: error instanceof Error ? error.message : 'Transfer failed',
+      };
     }
-    // Only clear on success
-    setTransferringPlaylist(null);
   };
 
   const handleCloseResults = () => {
-    setTransferResult(null);
+    setBatchResult(null);
     setTransferProgress(null);
     // Clear playlists and return to default state after viewing results
     setPlaylists([]);
@@ -170,13 +173,32 @@ export default function Home() {
   const handleBatchTransfer = async () => {
     const playlistsToTransfer = playlists.filter(p => !excludedPlaylists.has(p.name));
     const total = playlistsToTransfer.length;
+    const results: TransferResult[] = [];
 
     // Transfer ALL playlists sequentially with progress tracking
     for (let i = 0; i < playlistsToTransfer.length; i++) {
       setBatchProgress({ current: i + 1, total });
-      await handleTransfer(playlistsToTransfer[i]);
+      const result = await handleTransfer(playlistsToTransfer[i]);
+      if (result) {
+        results.push(result);
+      }
     }
 
+    // Calculate summary stats
+    const created = results.filter(r => !r.skipped && r.tracksAdded > 0).length;
+    const skipped = results.filter(r => r.skipped).length;
+    const failed = results.filter(r => !r.skipped && r.tracksAdded === 0 && r.tracksFailed > 0).length;
+
+    setBatchResult({
+      results,
+      totalPlaylists: total,
+      created,
+      skipped,
+      failed,
+    });
+
+    setTransferringPlaylist(null);
+    setTransferProgress(null);
     setBatchProgress(null);
   };
 
@@ -359,7 +381,7 @@ export default function Home() {
 
       {/* Transfer results modal */}
       <AnimatePresence>
-        {transferResult && (
+        {batchResult && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -373,9 +395,8 @@ export default function Home() {
               className="w-full max-w-lg"
             >
               <TransferResults
-                result={transferResult}
+                batchResult={batchResult}
                 onClose={handleCloseResults}
-                batchProgress={batchProgress}
               />
             </motion.div>
           </motion.div>
